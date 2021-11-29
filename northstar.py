@@ -81,14 +81,11 @@ class Populations:
 		def dist(patient):
 			return patient.getPatientType()
 
-		def intersection(l1, l2):
-			active = set(l2)
-			l3 = [v for v in l1 if value in active]
-			return l3
+		active = list(filter(lambda x: dist(x) != "", self.getAllTypes()))
 
-		active = list(filter(lambda x: dist(x) == "", self.getAllTypes()))
+		st = set((p.getCwid()) for p in self.getNotCompliant())
 
-		return intersection(active, self.getNotCompliant())
+		return ([p for p in active if (p.getCwid()) in st])
 
 
 
@@ -246,6 +243,73 @@ def readInCompliance(populations):
 
 
 
+def createComplianceNUMBERS(populations, path, t):
+	"""Create compliance numbers file"""
+	cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
+	with open(cN, "w", newline='') as f:
+		# CONTINUE HERE
+
+
+
+def createComplianceCWID(populations, path, t):
+	"""Create compliance CWID file"""
+	p = populations.getCompliant()
+	a = [[item.getCwid()] for item in p]
+	cN = os.path.join(path, "Compliance CWID({}).csv".format(t))
+	with open(cN, "w", newline='') as f:
+		with f:
+			write = csv.writer(f)
+			write.writerows(a)
+
+
+
+def createExemptionList(populations, path, t):
+	"""Create exemption CWID file (for Central IT)"""
+	p = populations.getExemptions()
+	a = [[item.getCwid()] for item in p]
+	cN = os.path.join(path, "Exemption List({}).csv".format(t))
+	with open(cN, "w", newline='') as f:
+		with f:
+			write = csv.writer(f)
+			write.writerows(a)
+
+
+
+def createExemptList(populations, path, t):
+	"""Create exempt CWID file (for PeopleSoft)"""
+	a = [[item.getCwid(), item.getStatus().strip('"')] for item in p]
+	cN = os.path.join(path, "Exempt List({}).csv".format(t))
+	with open(cN, "w", newline='') as f:
+		with f:
+			write = csv.writer(f)
+			write.writerows(a)
+
+
+
+def createPNCCompliantList(populations, path, t):
+	"""Create participant CWID file"""
+	p = populations.getParticipants()
+	a = [[item.getCwid()] for item in p]
+	cN = os.path.join(path, "PNC Compliant List({}).csv".format(t))
+	with open(cN, "w", newline='') as f:
+		with f:
+			write = csv.writer(f)
+			write.writerows(a)
+
+
+
+def createActiveNonCompliant(populations, path, t):
+	"""Create active, but not compliant CWID file"""
+	p = populations.getActiveNotCompliant()
+	a = [[item.getCwid()] for item in p]
+	cN = os.path.join(path, "Active Non-Compliant({}).csv".format(t))
+	with open(cN, "w", newline='') as f:
+		with f:
+			write = csv.writer(f)
+			write.writerows(a)
+
+
+
 def concurrent(*functions):
 	proc = []
 	for fn in functions:
@@ -271,15 +335,16 @@ if __name__ == "__main__":
 	concurrent(readInEmployees(populations), readInStudents(populations), \
 			   readInNonState(populations), readInCompliance(populations))
 	
-	p = populations.getActiveNotCompliant()
+	# Get current time
+	d = datetime.datetime.now()
+	e = d.strftime("%m-%d-%y %H%M%S %p")
 
-	a = [[item.getCwid()] for item in p]
+	# Get today's date
+	t = d.strftime("%b-%d-%Y")
 
-	f = open("test.csv", "w", newline='')
+	# Create folder
+	parent_dir = os.getcwd()
+	path = os.path.join(parent_dir, e)
+	os.mkdir(path)
 
-	with f:
-		write = csv.writer(f)
-		write.writerows(a)
-
-
-	f.close()
+	concurrent()
