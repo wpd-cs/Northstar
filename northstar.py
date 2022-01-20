@@ -84,14 +84,14 @@ class Populations:
 
 
 class Patient:
-	def __init__ (self, cwid, patientType = "", status = "", acadStatus = "", immunizations = [], adminDates = []):
+	def __init__ (self, cwid, patientType = "", status = "", acadStatus = ""):
 		"""Initialize class data members"""
 		self.__cwid = cwid
 		self.__patientType = patientType
 		self.__status = status
 		self.__acadStatus = acadStatus
-		self.__immunizations = immunizations
-		self.__adminDates = adminDates
+		self.__immunizations = []
+		self.__adminDates = []
 
 	def getCwid(self):
 		"""Get CWID"""
@@ -131,7 +131,7 @@ class Patient:
 
 	def appendImmunization(self, immunization):
 		"""Set immunization type"""
-		self.__immunizations = immunization
+		self.__immunizations.append(immunization)
 
 	def appendAdminDate(self, adminDate):
 		"""Set administration date"""
@@ -262,12 +262,16 @@ def readCairReport(populations):
 
 		for line in f:
 			myLine = line.split(',')
-			if myLine[0] in seen:
-				populations.CAIR_patients[myLine[0]]["immunizations"].append(myLine[3])
-				populations.CAIR_patients[myLine[0]]["adminDates"].append(myLine[5])
+
+			cwid = myLine[0].strip('"')
+
+			if cwid in seen:
+				populations.CAIR_patients[cwid].appendImmunization(myLine[3])
+				populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
 			else:
-				populations.CAIR_patients[myLine[0]]["immunizations"] = []
-				populations.CAIR_patients[myLine[0]]["adminDates"] = []
+				populations.CAIR_patients[cwid] = Patient(cwid)
+				populations.CAIR_patients[cwid].appendImmunization(myLine[3])
+				populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
 				seen.append(myLine[0])
 
 
