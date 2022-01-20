@@ -17,34 +17,34 @@ import os
 
 class Populations:
 	def __init__(self):
-		self.cStudents = []
-		self.fStudents = []
-		self.faculty = []
-		self.staff = []
-		self.asc = []
-		self.asi = []
-		self.nonstateStaff = []
-		self.unspecified = []
+		self.cStudents = {}
+		self.fStudents = {}
+		self.faculty = {}
+		self.staff = {}
+		self.asc = {}
+		self.asi = {}
+		self.nonstateStaff = {}
+		self.unspecified = {}
 
-		self.compliant = []
-		self.aReview = []
-		self.cExemption = []
-		self.eExemption = []
-		self.mExemption = []
-		self.rExemption = []
-		self.pExemption = []
-		self.bExemption = []
-		self.notCompliant = []
+		self.compliant = {}
+		self.aReview = {}
+		self.cExemption = {}
+		self.eExemption = {}
+		self.mExemption = {}
+		self.rExemption = {}
+		self.pExemption = {}
+		self.bExemption = {}
+		self.notCompliant = {}
+
+		self.CAIR_patients = {}
 
 	def getAllTypes(self):
-		return self.cStudents + \
-			   self.fStudents + \
-			   self.faculty + \
-			   self.staff + \
-			   self.asc + \
-			   self.asi + \
-			   self.nonstateStaff + \
-			   self.unspecified
+		"""Return all types of patients"""
+		temp = {}
+		for d in [self.cStudents, self.fStudents, self.faculty, self.staff, \
+				  self.asc, self.asi, self.nonstateStaff, self.unspecified]:
+			temp.update(d)
+		return temp
 
 	def getCompliant(self):
 		"""Return all compliant patients"""
@@ -59,43 +59,39 @@ class Populations:
 		return self.eExemption
 
 	def getExemptions(self):
-		return 	self.mExemption + \
-				self.rExemption + \
-				self.pExemption + \
-				self.bExemption
+		"""Return exemptions"""
+		temp = {}
+		for d in [self.mExemption, self.rExemption, self.pExemption, /
+				  self.bExemption]:
+			temp.update(d)
+		return temp
 
 	def getParticipants(self):
 		"""Return all patients who are compliant or 
 		   have attempted to comply"""
-		return self.compliant + \
-			   self.aReview + \
-			   self.cExemption + \
-			   self.eExemption + \
-			   self.mExemption + \
-			   self.rExemption + \
-			   self.pExemption + \
-			   self.bExemption
+		temp = {}
+		for d in [self.compliant, self.aReview, self.cExemption, \
+				  self.eExemption, self.mExemption, self.rExemption, \
+				  self.pExemption, self.bExemption]:
+			temp.update(d)
+		return temp
 
 	def getActiveNotCompliant(self):
 		"""Return all non-compliant active patients"""
-		def dist(patient):
-			return patient.getPatientType()
-
-		active = list(filter(lambda x: dist(x) != "", self.getAllTypes()))
-
-		st = set((p.getCwid()) for p in self.getNotCompliant())
-
-		return ([p for p in active if (p.getCwid()) in st])
+		# REDO
+		pass
 
 
 
 class Patient:
-	def __init__ (self, cwid, patientType = "", status = "", acadStatus = ""):
+	def __init__ (self, cwid, patientType = "", status = "", acadStatus = "", immunizations = [], adminDates = []):
 		"""Initialize class data members"""
 		self.__cwid = cwid
 		self.__patientType = patientType
 		self.__status = status
 		self.__acadStatus = acadStatus
+		self.__immunizations = immunizations
+		self.__adminDates = adminDates
 
 	def getCwid(self):
 		"""Get CWID"""
@@ -113,6 +109,14 @@ class Patient:
 		"""Get academic status"""
 		return self.__acadStatus
 
+	def getImmunization(self):
+		"""Get immunization type"""
+		return self.__immunization
+
+	def getAdminDate(self):
+		"""Get administration date"""
+		return self.__adminDate
+
 	def setPatientType(self, patientType):
 		"""Set patient type"""
 		self.__patientType = patientType
@@ -124,6 +128,14 @@ class Patient:
 	def setAcadStatus(self, acadStatus):
 		"""Set patient academic status"""
 		self.__acadStatus = acadStatus
+
+	def appendImmunization(self, immunization):
+		"""Set immunization type"""
+		self.__immunizations = immunization
+
+	def appendAdminDate(self, adminDate):
+		"""Set administration date"""
+		self.__adminDates.append(adminDate)
 
 
 
@@ -153,12 +165,12 @@ def readInEmployees(populations):
 		for line in f:
 			myLine = line.split('|')
 
-			patient = Patient(myLine[0], myLine[21])
+			patient = Patient(myLine[0].strip('"'), myLine[21])
 
 			if patient.getPatientType() == "Faculty":
-				populations.faculty.append(patient)
+				populations.faculty[patient.getCwid()] = patient
 			else:
-				populations.staff.append(patient)
+				populations.staff[patient.getCwid()] = patient
 	print("1 finishing\n")
 
 
@@ -173,12 +185,12 @@ def readInStudents(populations):
 		for line in f:
 			myLine = line.split('|')
 
-			patient = Patient(myLine[0], "Student", acadStatus = myLine[52])
+			patient = Patient(myLine[0].strip('"'), "Student", acadStatus = myLine[52])
 
 			if patient.getAcadStatus() == "ACTIVE":
-				populations.cStudents.append(patient)
+				populations.cStudents[patient.getCwid()] = patient
 			else:
-				populations.fStudents.append(patient)
+				populations.fStudents[patient.getCwid()] = patient
 	print("2 finishing\n")
 
 
@@ -193,12 +205,12 @@ def readInNonState(populations):
 		for line in f:
 			myLine = line.split('|')
 
-			patient = Patient(myLine[0], myLine[9])
+			patient = Patient(myLine[0].strip('"'), myLine[9])
 
 			if patient.getPatientType() == "ASC":
-				populations.asc.append(patient)
+				populations.asc[patient.getCwid()] = patient
 			elif patient.getPatientType() == "ASI":
-				populations.asi.append(patient)
+				populations.asi[patient.getCwid()] = patient
 			else:
 				populations.nonstateStaff.append(patient)
 	print("3 finishing\n")
@@ -215,31 +227,49 @@ def readInCompliance(populations):
 		for line in f:
 			myLine = line.split(',')
 
-			cwid = myLine[3].strip('"')
-			pstatus = myLine[7]
-
-			patient = Patient(cwid, status = pstatus)
+			patient = Patient(myLine[3].strip('"'), status = myLine[7])
 
 			match patient.getStatus():
 				case '"Compliant with Standard Requirements"':
-					populations.compliant.append(patient)
+					populations.compliant[patient.getCwid()] = patient
 				case '"Awaiting Review"':
-					populations.aReview.append(patient)
+					populations.aReview[patient.getCwid()] = patient
 				case '"Exemption: Pos COVID-19 90 Days"':
-					populations.cExemption.append(patient)
+					populations.cExemption[patient.getCwid()] = patient
 				case '"Exemption: Extension COVID-19"':
-					populations.eExemption.append(patient)
+					populations.eExemption[patient.getCwid()] = patient
 				case '"Exemption: Medical COVID-19"':
-					populations.mExemption.append(patient)
+					populations.mExemption[patient.getCwid()] = patient
 				case '"Exemption: Religious COVID-19"':
-					populations.rExemption.append(patient)
+					populations.rExemption[patient.getCwid()] = patient
 				case '"Exemption: Pregnant COVID-19"':
-					populations.pExemption.append(patient)
+					populations.pExemption[patient.getCwid()] = patient
 				case '"Exemption: Breast Feeding COVID"':
-					populations.bExemption.append(patient)
+					populations.bExemption[patient.getCwid()] = patient
 				case _:
-					populations.notCompliant.append(patient)
+					populations.notCompliant[patient.getCwid()] = patient
 	print("4 finishing\n")
+
+
+
+def readCairReport(populations):
+	"""Read in CAIR Report"""
+	with open("sample.txt", "r") as f:
+		temp = f.readline()
+		del temp
+
+		seen = []
+
+		for line in f:
+			myLine = line.split(',')
+			if myLine[0] in seen:
+				populations.CAIR_patients[myLine[0]]["immunizations"].append(myLine[3])
+				populations.CAIR_patients[myLine[0]]["adminDates"].append(myLine[5])
+			else:
+				populations.CAIR_patients[myLine[0]]["immunizations"] = []
+				populations.CAIR_patients[myLine[0]]["adminDates"] = []
+				seen.append(myLine[0])
+
 
 
 
@@ -247,6 +277,7 @@ def createComplianceNUMBERS(populations, path, t):
 	"""Create compliance numbers file"""
 	cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
 	with open(cN, "w", newline='') as f:
+		pass
 		# CONTINUE HERE
 
 
@@ -333,7 +364,8 @@ if __name__ == "__main__":
 	# populations = Populations()
 
 	concurrent(readInEmployees(populations), readInStudents(populations), \
-			   readInNonState(populations), readInCompliance(populations))
+			   readInNonState(populations), readInCompliance(populations), \
+			   readCairReport(populations))
 	
 	# Get current time
 	d = datetime.datetime.now()
