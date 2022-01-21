@@ -46,8 +46,29 @@ class Populations:
 			temp.update(d)
 		return temp
 
+	def getAllEmployees(self):
+		"""Return all types of employees"""
+		temp = {}
+		for d in [self.faculty, self.staff, self.asc, self.asi, \
+				  self.nonstateStaff]:
+			temp.update(d)
+		return temp
+
 	def getCompliant(self):
 		"""Return all compliant patients"""
+		rem = []
+
+		for key in self.CAIR_patients.keys():
+			if key in self.getAllEmployees().keys():
+				rem.append(key)
+
+		# # Cannot include employees with CAIRS data
+		# for key in self.compliant.keys():
+		# 	if key in self.CAIR_patients.keys() && key in self.getAllEmployees().keys():
+		# 		if self.CAIR_patients[key].getLots():
+		# 			rem.append(key)
+
+		[self.compliant.pop(key) for key in rem]
 		return self.compliant
 
 	def getNotCompliant(self):
@@ -61,7 +82,7 @@ class Populations:
 	def getExemptions(self):
 		"""Return exemptions"""
 		temp = {}
-		for d in [self.mExemption, self.rExemption, self.pExemption, /
+		for d in [self.mExemption, self.rExemption, self.pExemption, \
 				  self.bExemption]:
 			temp.update(d)
 		return temp
@@ -92,6 +113,7 @@ class Patient:
 		self.__acadStatus = acadStatus
 		self.__immunizations = []
 		self.__adminDates = []
+		self.__lots = []
 
 	def getCwid(self):
 		"""Get CWID"""
@@ -109,13 +131,17 @@ class Patient:
 		"""Get academic status"""
 		return self.__acadStatus
 
-	def getImmunization(self):
+	def getImmunizations(self):
 		"""Get immunization type"""
 		return self.__immunization
 
-	def getAdminDate(self):
+	def getAdminDates(self):
 		"""Get administration date"""
 		return self.__adminDate
+
+	def getLots(self):
+		"""Get lot number"""
+		return self.__lots
 
 	def setPatientType(self, patientType):
 		"""Set patient type"""
@@ -136,6 +162,10 @@ class Patient:
 	def appendAdminDate(self, adminDate):
 		"""Set administration date"""
 		self.__adminDates.append(adminDate)
+
+	def appendLot(self, lot):
+		"""Set lot number"""
+		self.__lots.append(lot)
 
 
 
@@ -212,7 +242,7 @@ def readInNonState(populations):
 			elif patient.getPatientType() == "ASI":
 				populations.asi[patient.getCwid()] = patient
 			else:
-				populations.nonstateStaff.append(patient)
+				populations.nonstateStaff[patient.getCwid()] = patient
 	print("3 finishing\n")
 
 
@@ -254,7 +284,8 @@ def readInCompliance(populations):
 
 def readCairReport(populations):
 	"""Read in CAIR Report"""
-	with open("sample.txt", "r") as f:
+	print("5 starting\n")
+	with open("cairs.txt", "r") as f:
 		temp = f.readline()
 		del temp
 
@@ -265,83 +296,92 @@ def readCairReport(populations):
 
 			cwid = myLine[0].strip('"')
 
-			if cwid in seen:
-				populations.CAIR_patients[cwid].appendImmunization(myLine[3])
-				populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
-			else:
-				populations.CAIR_patients[cwid] = Patient(cwid)
-				populations.CAIR_patients[cwid].appendImmunization(myLine[3])
-				populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
-				seen.append(myLine[0])
+			if myLine[4] != '""':
+				if cwid in seen:
+					populations.CAIR_patients[cwid].appendImmunization(myLine[3])
+					populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
+					populations.CAIR_patients[cwid].appendLot(myLine[4])
+				else:
+					populations.CAIR_patients[cwid] = Patient(cwid)
+					populations.CAIR_patients[cwid].appendImmunization(myLine[3])
+					populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
+					populations.CAIR_patients[cwid].appendLot(myLine[4])
 
+					seen.append(myLine[0])
+	print("5 finishing\n")
 
 
 
 def createComplianceNUMBERS(populations, path, t):
 	"""Create compliance numbers file"""
-	cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
-	with open(cN, "w", newline='') as f:
-		pass
-		# CONTINUE HERE
+	print("6 starting\n")
+	# cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
+	# with open(cN, "w", newline='') as f:
+	# 	pass
+	# 	CONTINUE HERE
+	print("6 finishing\n")
 
 
 
 def createComplianceCWID(populations, path, t):
 	"""Create compliance CWID file"""
+	print("7 starting\n")
 	p = populations.getCompliant()
-	a = [[item.getCwid()] for item in p]
 	cN = os.path.join(path, "Compliance CWID({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
-		with f:
-			write = csv.writer(f)
-			write.writerows(a)
+		writer = csv.writer(f)
+		for key in p.keys():
+			writer.writerow([key])
+	print("7 finishing\n")
 
 
 
 def createExemptionList(populations, path, t):
 	"""Create exemption CWID file (for Central IT)"""
+	print("8 starting\n")
 	p = populations.getExemptions()
-	a = [[item.getCwid()] for item in p]
 	cN = os.path.join(path, "Exemption List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
-		with f:
-			write = csv.writer(f)
-			write.writerows(a)
+		writer = csv.writer(f)
+		for key, value in p.items():
+			writer.writerow([key])
+	print("8 finishing\n")
 
 
 
 def createExemptList(populations, path, t):
 	"""Create exempt CWID file (for PeopleSoft)"""
-	a = [[item.getCwid(), item.getStatus().strip('"')] for item in p]
+	print("9 starting\n")
+	p = populations.getExemptions()
 	cN = os.path.join(path, "Exempt List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
-		with f:
-			write = csv.writer(f)
-			write.writerows(a)
-
+		writer = csv.writer(f)
+		for key, value in p.items():
+			writer.writerow([key, value.getStatus().strip('"')])
+	print("9 finishing\n")
 
 
 def createPNCCompliantList(populations, path, t):
 	"""Create participant CWID file"""
+	print("10 starting\n")
 	p = populations.getParticipants()
-	a = [[item.getCwid()] for item in p]
 	cN = os.path.join(path, "PNC Compliant List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
-		with f:
-			write = csv.writer(f)
-			write.writerows(a)
+		writer = csv.writer(f)
+		for key in p.keys():
+			writer.writerow([key])
+	print("10 finishing\n")
 
 
 
-def createActiveNonCompliant(populations, path, t):
-	"""Create active, but not compliant CWID file"""
-	p = populations.getActiveNotCompliant()
-	a = [[item.getCwid()] for item in p]
-	cN = os.path.join(path, "Active Non-Compliant({}).csv".format(t))
-	with open(cN, "w", newline='') as f:
-		with f:
-			write = csv.writer(f)
-			write.writerows(a)
+# def createActiveNonCompliant(populations, path, t):
+# 	"""Create active, but not compliant CWID file"""
+# 	p = populations.getActiveNotCompliant()
+# 	cN = os.path.join(path, "Active Non-Compliant({}).csv".format(t))
+# 	with open(cN, "w", newline='') as f:
+# 		writer = csv.writer(f)
+# 		for key in p.keys():
+# 			writer.writerow([key])
 
 
 
@@ -383,4 +423,5 @@ if __name__ == "__main__":
 	path = os.path.join(parent_dir, e)
 	os.mkdir(path)
 
-	concurrent()
+	concurrent(createComplianceCWID(populations, path, t), createExemptionList(populations, path, t), \
+			   createExemptList(populations, path, t), createPNCCompliantList(populations, path, t))
