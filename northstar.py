@@ -54,21 +54,30 @@ class Populations:
 			temp.update(d)
 		return temp
 
-	def getCompliant(self):
-		"""Return all compliant patients"""
-		rem = []
+	def prepLists(self):
+		"""Remove CAIR employees and assign immunizations and dates \
+		   to/from the Compliant dictionary"""
 
+		# Remove CAIR employees
+		rem = []
 		for key in self.CAIR_patients.keys():
-			if key in self.getAllEmployees().keys():
+			if key in self.getAllEmployees().keys() and key in self.compliant.keys():
 				rem.append(key)
 
-		# # Cannot include employees with CAIRS data
-		# for key in self.compliant.keys():
-		# 	if key in self.CAIR_patients.keys() && key in self.getAllEmployees().keys():
-		# 		if self.CAIR_patients[key].getLots():
-		# 			rem.append(key)
-
 		[self.compliant.pop(key) for key in rem]
+
+		# Assign immunizations and dates to patients
+		for key in self.compliant.keys():
+			if key in self.CAIR_patients.keys():
+				self.compliant[key].appendImmunization(self.CAIR_patients[key].getImmunizations())
+				self.compliant[key].appendLot(self.CAIR_patients[key].getLots())
+				self.compliant[key].appendAdminDate(self.CAIR_patients[key].getAdminDates())
+				self.compliant[key].appendProcessingDate(self.CAIR_patients[key].getProcessingDates())
+				self.compliant[key].setEmployee(self.CAIR_patients[key].getEmployee())
+				self.compliant[key].setStudent(self.CAIR_patients[key].getStudent())
+
+	def getCompliant(self):
+		"""Return all compliant patients"""
 		return self.compliant
 
 	def getNotCompliant(self):
@@ -102,18 +111,27 @@ class Populations:
 		# REDO
 		pass
 
+	def getCompliantDetails(self):
+		"""Return immunization details"""
+		return self.CAIR_patients
+
+
 
 
 class Patient:
-	def __init__ (self, cwid, patientType = "", status = "", acadStatus = ""):
+	def __init__ (self, cwid, patientType = "", status = "", \
+				  acadStatus = "", employee = "", student = ""):
 		"""Initialize class data members"""
 		self.__cwid = cwid
 		self.__patientType = patientType
 		self.__status = status
 		self.__acadStatus = acadStatus
 		self.__immunizations = []
-		self.__adminDates = []
 		self.__lots = []
+		self.__adminDates = []
+		self.__processingDates = []
+		self.__isEmployee = employee
+		self.__isStudent = student
 
 	def getCwid(self):
 		"""Get CWID"""
@@ -133,15 +151,27 @@ class Patient:
 
 	def getImmunizations(self):
 		"""Get immunization type"""
-		return self.__immunization
-
-	def getAdminDates(self):
-		"""Get administration date"""
-		return self.__adminDate
+		return self.__immunizations
 
 	def getLots(self):
 		"""Get lot number"""
 		return self.__lots
+
+	def getAdminDates(self):
+		"""Get administration date"""
+		return self.__adminDates
+
+	def getProcessingDates(self):
+		"""Get processing date"""
+		return self.__processingDates
+
+	def getEmployee(self):
+		"""Return whether a patient is an employee"""
+		return self.__isEmployee
+
+	def getStudent(self):
+		"""Return whether a patient is a student"""
+		return self.__isStudent
 
 	def setPatientType(self, patientType):
 		"""Set patient type"""
@@ -157,22 +187,34 @@ class Patient:
 
 	def appendImmunization(self, immunization):
 		"""Set immunization type"""
-		self.__immunizations.append(immunization)
-
-	def appendAdminDate(self, adminDate):
-		"""Set administration date"""
-		self.__adminDates.append(adminDate)
+		self.__immunizations.extend(immunization)
 
 	def appendLot(self, lot):
 		"""Set lot number"""
-		self.__lots.append(lot)
+		self.__lots.extend(lot)
+
+	def appendAdminDate(self, adminDate):
+		"""Set administration date"""
+		self.__adminDates.extend(adminDate)
+
+	def appendProcessingDate(self, processingDate):
+		"""Set processing date"""
+		self.__processingDates.extend(processingDate)
+
+	def setEmployee(self, employee):
+		"""Set employee position"""
+		self.__isEmployee = employee
+
+	def setStudent(self, student):
+		"""Set student position"""
+		self.__isStudent = student
 
 
 
 def checkFiles():
 	"""Check to make sure all input files are present"""
-	listOfFiles = ["compliance.txt", "employee.txt", "student.txt", \
-				   "nonstate.txt"]
+	listOfFiles = ["compliance.csv", "employee.txt", "student.txt", \
+				   "nonstate.txt", "cairs.csv"]
 
 	filesNeeded = []
 
@@ -250,14 +292,12 @@ def readInNonState(populations):
 def readInCompliance(populations):
 	"""Read in PNC Data"""
 	print("4 starting\n")
-	with open("compliance.txt", "r") as f:
-		temp = f.readline()
-		del temp
+	with open("compliance.csv") as f:
+		csv_reader = csv.reader(f, delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
+		next(csv_reader)
 
-		for line in f:
-			myLine = line.split(',')
-
-			patient = Patient(myLine[3].strip('"'), status = myLine[7])
+		for row in csv_reader:
+			patient = Patient(row[3].strip('"'), status = row[6])
 
 			match patient.getStatus():
 				case '"Compliant with Standard Requirements"':
@@ -285,29 +325,37 @@ def readInCompliance(populations):
 def readCairReport(populations):
 	"""Read in CAIR Report"""
 	print("5 starting\n")
-	with open("cairs.txt", "r") as f:
-		temp = f.readline()
-		del temp
+	with open("cairs.csv") as f:
+		csv_reader = csv.reader(f)
+		next(csv_reader)
 
 		seen = []
 
-		for line in f:
-			myLine = line.split(',')
+		for row in csv_reader:
+			cwid = row[0].strip('"')
 
-			cwid = myLine[0].strip('"')
-
-			if myLine[4] != '""':
+			if row[4] != '""':
 				if cwid in seen:
-					populations.CAIR_patients[cwid].appendImmunization(myLine[3])
-					populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
-					populations.CAIR_patients[cwid].appendLot(myLine[4])
+					populations.CAIR_patients[cwid].appendImmunization(row[3])
+					populations.CAIR_patients[cwid].appendLot(row[4])
+					populations.CAIR_patients[cwid].appendAdminDate(row[5])
+					populations.CAIR_patients[cwid].appendProcessingDate(row[6])
 				else:
-					populations.CAIR_patients[cwid] = Patient(cwid)
-					populations.CAIR_patients[cwid].appendImmunization(myLine[3])
-					populations.CAIR_patients[cwid].appendAdminDate(myLine[5])
-					populations.CAIR_patients[cwid].appendLot(myLine[4])
+					populations.CAIR_patients[cwid] = Patient(cwid, employee = row[7], \
+															  student = row[8])
+					populations.CAIR_patients[cwid].appendImmunization(row[3])
+					populations.CAIR_patients[cwid].appendLot(row[4])
+					populations.CAIR_patients[cwid].appendAdminDate(row[5])
+					populations.CAIR_patients[cwid].appendProcessingDate(row[6])
 
-					seen.append(myLine[0])
+					seen.append(row[0])
+	print(populations.CAIR_patients["885236893"].getImmunizations())
+	print(populations.CAIR_patients["885236893"].getLots())
+	print(populations.CAIR_patients["885236893"].getAdminDates())
+	print(populations.CAIR_patients["885236893"].getProcessingDates())
+	print(populations.CAIR_patients["885236893"].getEmployee())
+	print(populations.CAIR_patients["885236893"].getStudent())
+	populations.prepLists()
 	print("5 finishing\n")
 
 
@@ -317,8 +365,8 @@ def createComplianceNUMBERS(populations, path, t):
 	print("6 starting\n")
 	# cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
 	# with open(cN, "w", newline='') as f:
-	# 	pass
 	# 	CONTINUE HERE
+	
 	print("6 finishing\n")
 
 
@@ -374,14 +422,34 @@ def createPNCCompliantList(populations, path, t):
 
 
 
-# def createActiveNonCompliant(populations, path, t):
-# 	"""Create active, but not compliant CWID file"""
-# 	p = populations.getActiveNotCompliant()
-# 	cN = os.path.join(path, "Active Non-Compliant({}).csv".format(t))
-# 	with open(cN, "w", newline='') as f:
-# 		writer = csv.writer(f)
-# 		for key in p.keys():
-# 			writer.writerow([key])
+def createActiveNonCompliant(populations, path, t):
+	"""Create active, but not compliant CWID file"""
+	print("11 starting\n")
+	# p = populations.getActiveNotCompliant()
+	# cN = os.path.join(path, "Active Non-Compliant({}).csv".format(t))
+	# with open(cN, "w", newline='') as f:
+	# 	writer = csv.writer(f)
+	# 	for key in p.keys():
+	# 		writer.writerow([key])
+	print("11 finishing\n")
+
+
+
+def createCompliantDetails(populations, path, t):
+	"""Create file wih immunization details"""
+	print("12 starting\n")
+	p = populations.getCompliant()
+	cN = cN = os.path.join(path, "Compliant Details({}).csv".format(t))
+	with open(cN, "w", newline='') as f:
+		writer= csv.writer(f)
+		for key, value in p.items():
+			for x in range(len(value.getImmunizations())):
+				writer.writerow([key, value.getImmunizations()[x], \
+								 value.getLots()[x], \
+								 value.getAdminDates()[x], \
+								 value.getProcessingDates()[x], \
+								 value.getEmployee(), value.getStudent()])
+	print("12 finishing\n")
 
 
 
@@ -403,25 +471,39 @@ populations = Populations()
 if __name__ == "__main__":
 	"""Main function"""
 
-	# Initialize variables
-
-	# populations = Populations()
+	checkFiles()
 
 	concurrent(readInEmployees(populations), readInStudents(populations), \
 			   readInNonState(populations), readInCompliance(populations), \
 			   readCairReport(populations))
-	
-	# Get current time
-	d = datetime.datetime.now()
-	e = d.strftime("%m-%d-%y %H%M%S %p")
 
-	# Get today's date
-	t = d.strftime("%b-%d-%Y")
+	# counter = 0
+	# for key, value in populations.getCompliant().items():
+	# 	if len(value.getImmunizations()) != len(value.getAdminDates()):
+	# 		counter += 1
+	# print("{}\n".format(counter))
 
-	# Create folder
-	parent_dir = os.getcwd()
-	path = os.path.join(parent_dir, e)
-	os.mkdir(path)
+	# print("{}".format(populations.getCompliant()["885236893"].getImmunizations()))
+	# print("{}".format(populations.getCompliant()["885236893"].getLots()))
+	# print("{}".format(populations.getCompliant()["885236893"].getAdminDates()))
+	# print("{}".format(populations.getCompliant()["885236893"].getProcessingDates()))
+	# print("{}".format(populations.getCompliant()["885236893"].getEmployee()))
+	# print("{}".format(populations.getCompliant()["885236893"].getStudent()))
 
-	concurrent(createComplianceCWID(populations, path, t), createExemptionList(populations, path, t), \
-			   createExemptList(populations, path, t), createPNCCompliantList(populations, path, t))
+
+	# # Get current time
+	# d = datetime.datetime.now()
+	# e = d.strftime("%m-%d-%y %H%M%S %p")
+
+	# # Get today's date
+	# t = d.strftime("%b-%d-%Y")
+
+	# # Create folder
+	# parent_dir = os.getcwd()
+	# path = os.path.join(parent_dir, e)
+	# os.mkdir(path)
+
+	# concurrent(createComplianceNUMBERS(populations, path, t), createComplianceCWID(populations, path, t), \
+	# 		   createExemptionList(populations, path, t), createExemptList(populations, path, t), \
+	# 		   createPNCCompliantList(populations, path, t), createActiveNonCompliant(populations, path, t), \
+	# 		   createCompliantDetails(populations, path, t))
