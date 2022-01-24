@@ -187,19 +187,19 @@ class Patient:
 
 	def appendImmunization(self, immunization):
 		"""Set immunization type"""
-		self.__immunizations.extend(immunization)
+		self.__immunizations.append(immunization)
 
 	def appendLot(self, lot):
 		"""Set lot number"""
-		self.__lots.extend(lot)
+		self.__lots.append(lot)
 
 	def appendAdminDate(self, adminDate):
 		"""Set administration date"""
-		self.__adminDates.extend(adminDate)
+		self.__adminDates.append(adminDate)
 
 	def appendProcessingDate(self, processingDate):
 		"""Set processing date"""
-		self.__processingDates.extend(processingDate)
+		self.__processingDates.append(processingDate)
 
 	def setEmployee(self, employee):
 		"""Set employee position"""
@@ -293,31 +293,36 @@ def readInCompliance(populations):
 	"""Read in PNC Data"""
 	print("4 starting\n")
 	with open("compliance.csv") as f:
-		csv_reader = csv.reader(f, delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)
+		csv_reader = csv.reader(f)
 		next(csv_reader)
 
+
 		for row in csv_reader:
-			patient = Patient(row[3].strip('"'), status = row[6])
+			# print(row)
+			patient = Patient(row[3].strip("'"), status = row[6])
 
 			match patient.getStatus():
-				case '"Compliant with Standard Requirements"':
+				case 'Compliant with Standard Requirements':
 					populations.compliant[patient.getCwid()] = patient
-				case '"Awaiting Review"':
+				case 'Awaiting Review':
 					populations.aReview[patient.getCwid()] = patient
-				case '"Exemption: Pos COVID-19 90 Days"':
+				case 'Exemption: Pos COVID-19 90 Days':
 					populations.cExemption[patient.getCwid()] = patient
-				case '"Exemption: Extension COVID-19"':
+				case 'Exemption: Extension COVID-19':
 					populations.eExemption[patient.getCwid()] = patient
-				case '"Exemption: Medical COVID-19"':
+				case 'Exemption: Medical COVID-19':
 					populations.mExemption[patient.getCwid()] = patient
-				case '"Exemption: Religious COVID-19"':
+				case 'Exemption: Religious COVID-19':
 					populations.rExemption[patient.getCwid()] = patient
-				case '"Exemption: Pregnant COVID-19"':
+				case 'Exemption: Pregnant COVID-19':
 					populations.pExemption[patient.getCwid()] = patient
-				case '"Exemption: Breast Feeding COVID"':
+				case 'Exemption: Breast Feeding COVID':
 					populations.bExemption[patient.getCwid()] = patient
 				case _:
 					populations.notCompliant[patient.getCwid()] = patient
+
+	# print(populations.getCompliant())
+
 	print("4 finishing\n")
 
 
@@ -349,12 +354,16 @@ def readCairReport(populations):
 					populations.CAIR_patients[cwid].appendProcessingDate(row[6])
 
 					seen.append(row[0])
-	print(populations.CAIR_patients["885236893"].getImmunizations())
-	print(populations.CAIR_patients["885236893"].getLots())
-	print(populations.CAIR_patients["885236893"].getAdminDates())
-	print(populations.CAIR_patients["885236893"].getProcessingDates())
-	print(populations.CAIR_patients["885236893"].getEmployee())
-	print(populations.CAIR_patients["885236893"].getStudent())
+
+	# print(populations.CAIR_patients["885236893"].getCwid())
+	# print(populations.CAIR_patients["885236893"].getImmunizations())
+	# print(populations.CAIR_patients["885236893"].getLots())
+	# print(populations.CAIR_patients["885236893"].getAdminDates())
+	# print(populations.CAIR_patients["885236893"].getProcessingDates())
+	# print(populations.CAIR_patients["885236893"].getEmployee())
+	# print(populations.CAIR_patients["885236893"].getStudent())
+
+
 	populations.prepLists()
 	print("5 finishing\n")
 
@@ -378,8 +387,8 @@ def createComplianceCWID(populations, path, t):
 	cN = os.path.join(path, "Compliance CWID({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
-		for key in p.keys():
-			writer.writerow([key])
+		for value in p.values():
+			writer.writerow([value.getCwid()])
 	print("7 finishing\n")
 
 
@@ -391,8 +400,8 @@ def createExemptionList(populations, path, t):
 	cN = os.path.join(path, "Exemption List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
-		for key, value in p.items():
-			writer.writerow([key])
+		for value in p.values():
+			writer.writerow([value.getCwid()])
 	print("8 finishing\n")
 
 
@@ -404,8 +413,8 @@ def createExemptList(populations, path, t):
 	cN = os.path.join(path, "Exempt List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
-		for key, value in p.items():
-			writer.writerow([key, value.getStatus().strip('"')])
+		for value in p.values():
+			writer.writerow([value.getCwid(), value.getStatus().strip('"')])
 	print("9 finishing\n")
 
 
@@ -416,8 +425,8 @@ def createPNCCompliantList(populations, path, t):
 	cN = os.path.join(path, "PNC Compliant List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
-		for key in p.keys():
-			writer.writerow([key])
+		for value in p.values():
+			writer.writerow([value.getCwid()])
 	print("10 finishing\n")
 
 
@@ -440,13 +449,21 @@ def createCompliantDetails(populations, path, t):
 	print("12 starting\n")
 	p = populations.getCompliant()
 	cN = cN = os.path.join(path, "Compliant Details({}).csv".format(t))
+
+	# print(p["885236893"].getCwid())
+	# print(p["885236893"].getImmunizations())
+	# print(p["885236893"].getLots())
+	# print(p["885236893"].getAdminDates())
+	# print(p["885236893"].getProcessingDates())
+	# print(p["885236893"].getEmployee())
+	# print(p["885236893"].getStudent())
+
 	with open(cN, "w", newline='') as f:
 		writer= csv.writer(f)
-		for key, value in p.items():
+		for value in p.values():
 			for x in range(len(value.getImmunizations())):
-				writer.writerow([key, value.getImmunizations()[x], \
-								 value.getLots()[x], \
-								 value.getAdminDates()[x], \
+				writer.writerow([value.getCwid(), value.getImmunizations()[x], \
+								 value.getLots()[x], value.getAdminDates()[x], \
 								 value.getProcessingDates()[x], \
 								 value.getEmployee(), value.getStudent()])
 	print("12 finishing\n")
@@ -491,19 +508,19 @@ if __name__ == "__main__":
 	# print("{}".format(populations.getCompliant()["885236893"].getStudent()))
 
 
-	# # Get current time
-	# d = datetime.datetime.now()
-	# e = d.strftime("%m-%d-%y %H%M%S %p")
+	# Get current time
+	d = datetime.datetime.now()
+	e = d.strftime("%m-%d-%y %H%M%S %p")
 
-	# # Get today's date
-	# t = d.strftime("%b-%d-%Y")
+	# Get today's date
+	t = d.strftime("%b-%d-%Y")
 
-	# # Create folder
-	# parent_dir = os.getcwd()
-	# path = os.path.join(parent_dir, e)
-	# os.mkdir(path)
+	# Create folder
+	parent_dir = os.getcwd()
+	path = os.path.join(parent_dir, e)
+	os.mkdir(path)
 
-	# concurrent(createComplianceNUMBERS(populations, path, t), createComplianceCWID(populations, path, t), \
-	# 		   createExemptionList(populations, path, t), createExemptList(populations, path, t), \
-	# 		   createPNCCompliantList(populations, path, t), createActiveNonCompliant(populations, path, t), \
-	# 		   createCompliantDetails(populations, path, t))
+	concurrent(createComplianceNUMBERS(populations, path, t), createComplianceCWID(populations, path, t), \
+			   createExemptionList(populations, path, t), createExemptList(populations, path, t), \
+			   createPNCCompliantList(populations, path, t), createActiveNonCompliant(populations, path, t), \
+			   createCompliantDetails(populations, path, t))
