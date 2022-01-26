@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-
 William Duong
 Project started: November 17, 2021
 wpduong@gmail.com
-
 Last Updated: 11/17/2021
-
 """
 
 from sys import exit
@@ -355,6 +352,12 @@ def readCairReport(populations):
 
 					seen.append(row[0])
 
+		for key in populations.CAIR_patients.keys():
+			while len(populations.CAIR_patients[key].getImmunizations()) != 3:
+				populations.CAIR_patients[key].appendImmunization('')
+				populations.CAIR_patients[key].appendAdminDate('')
+				populations.CAIR_patients[key]. appendProcessingDate('')
+
 	# print(populations.CAIR_patients["885236893"].getCwid())
 	# print(populations.CAIR_patients["885236893"].getImmunizations())
 	# print(populations.CAIR_patients["885236893"].getLots())
@@ -448,7 +451,7 @@ def createCompliantDetails(populations, path, t):
 	"""Create file wih immunization details"""
 	print("12 starting\n")
 	p = populations.getCompliant()
-	cN = cN = os.path.join(path, "Compliant Details({}).csv".format(t))
+	cN = os.path.join(path, "Compliant Details({}).csv".format(t))
 
 	# print(p["885236893"].getCwid())
 	# print(p["885236893"].getImmunizations())
@@ -458,14 +461,36 @@ def createCompliantDetails(populations, path, t):
 	# print(p["885236893"].getEmployee())
 	# print(p["885236893"].getStudent())
 
+	header = ['CWID', 'Dose Count', 'I1', 'AD1', 'PD1', 'L1', \
+			  'I2', 'AD2', 'PD2', 'L2', 'I3', 'AD3', 'PD3', 'L3']
+
 	with open(cN, "w", newline='') as f:
-		writer= csv.writer(f)
+		writer = csv.writer(f)
+
+		writer.writerow(header)
+
 		for value in p.values():
-			for x in range(len(value.getImmunizations())):
-				writer.writerow([value.getCwid(), value.getImmunizations()[x], \
-								 value.getLots()[x], value.getAdminDates()[x], \
-								 value.getProcessingDates()[x], \
-								 value.getEmployee(), value.getStudent()])
+
+			notEmpty = True if len(value.getImmunizations()) > 0 else False
+			length321 = True if (notEmpty) and (len(value.getImmunizations()) <= 3) else False
+
+			# print(value.getCwid(), value.getImmunizations())
+
+			row = [value.getCwid(), len(value.getImmunizations()), \
+				   value.getImmunizations()[0], \
+				   value.getAdminDates()[0], \
+				   value.getProcessingDates()[0], \
+				   value.getLots()[0], \
+				   value.getImmunizations()[1], \
+				   value.getAdminDates()[1], \
+				   value.getProcessingDates()[1], \
+				   value.getLots()[1], \
+				   value.getImmunizations()[2], \
+				   value.getAdminDates()[2], \
+				   value.getProcessingDates()[2], \
+				   value.getLots()[2]]
+
+			writer.writerow(row)
 	print("12 finishing\n")
 
 
