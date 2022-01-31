@@ -66,12 +66,12 @@ class Populations:
 		# Assign immunizations and dates to patients
 		for key in self.compliant.keys():
 			if key in self.CAIR_patients.keys():
-				self.compliant[key].appendImmunization(self.CAIR_patients[key].getImmunizations())
-				self.compliant[key].appendLot(self.CAIR_patients[key].getLots())
-				self.compliant[key].appendAdminDate(self.CAIR_patients[key].getAdminDates())
-				self.compliant[key].appendProcessingDate(self.CAIR_patients[key].getProcessingDates())
+				self.compliant[key].chainList(self.CAIR_patients[key])
 				self.compliant[key].setEmployee(self.CAIR_patients[key].getEmployee())
 				self.compliant[key].setStudent(self.CAIR_patients[key].getStudent())
+				self.compliant[key].setDoseCount(len(self.CAIR_patients[key].getImmunizations()))
+
+			self.compliant[key].fillLists()
 
 	def getCompliant(self):
 		"""Return all compliant patients"""
@@ -127,6 +127,7 @@ class Patient:
 		self.__lots = []
 		self.__adminDates = []
 		self.__processingDates = []
+		self.__doseCount = 0
 		self.__isEmployee = employee
 		self.__isStudent = student
 
@@ -184,7 +185,18 @@ class Patient:
 
 	def appendImmunization(self, immunization):
 		"""Set immunization type"""
-		self.__immunizations.append(immunization)
+
+		match immunization:
+			case 'COVID-19, mRNA LNP-S PF 100mcg or 50mcg':
+				self.__immunizations.append('COVID-19 Moderna mRNA-LNP spike')
+			case 'COVID-19, mRNA,LNP-S,PF':
+				self.__immunizations.append('COVID-19 Pfizer mRNA-LNP spike')
+			case 'COVID-19, vector-nr, rS-Ad26, PF':
+				self.__immunizations.append('COVID-19Janssen/J&J viral vector')
+			case 'COVID-19, vector-nr, rS-ChAdOx1':
+				self.__immunizations.append('COVID-19 AstraZeneca viralvector')
+			case _:
+				self.__immunizations.append(immunization)
 
 	def appendLot(self, lot):
 		"""Set lot number"""
@@ -197,6 +209,30 @@ class Patient:
 	def appendProcessingDate(self, processingDate):
 		"""Set processing date"""
 		self.__processingDates.append(processingDate)
+
+	def setDoseCount(self, count):
+		"""Set dose count"""
+		self.__doseCount = count
+
+	def getDoseCount(self):
+		"""Return dose count"""
+		return self.__doseCount
+
+	def chainList(self, new):
+		"""Put existing lists together"""
+		self.__immunizations.extend(new.getImmunizations())
+		self.__lots.extend(new.getLots())
+		self.__adminDates.extend(new.getAdminDates())
+		self.__processingDates.extend(new.getProcessingDates())
+
+
+	def fillLists(self):
+		"""Pad any lists that are not of length 3"""
+		N = 3
+		self.__immunizations += [''] * (N - len(self.__immunizations))
+		self.__lots += [''] * (N - len(self.__lots))
+		self.__adminDates += [''] * (N - len(self.__adminDates))
+		self.__processingDates += [''] * (N - len(self.__processingDates))
 
 	def setEmployee(self, employee):
 		"""Set employee position"""
@@ -352,12 +388,6 @@ def readCairReport(populations):
 
 					seen.append(row[0])
 
-		for key in populations.CAIR_patients.keys():
-			while len(populations.CAIR_patients[key].getImmunizations()) != 3:
-				populations.CAIR_patients[key].appendImmunization('')
-				populations.CAIR_patients[key].appendAdminDate('')
-				populations.CAIR_patients[key]. appendProcessingDate('')
-
 	# print(populations.CAIR_patients["885236893"].getCwid())
 	# print(populations.CAIR_patients["885236893"].getImmunizations())
 	# print(populations.CAIR_patients["885236893"].getLots())
@@ -471,12 +501,9 @@ def createCompliantDetails(populations, path, t):
 
 		for value in p.values():
 
-			notEmpty = True if len(value.getImmunizations()) > 0 else False
-			length321 = True if (notEmpty) and (len(value.getImmunizations()) <= 3) else False
-
 			# print(value.getCwid(), value.getImmunizations())
 
-			row = [value.getCwid(), len(value.getImmunizations()), \
+			row = [value.getCwid(), value.getDoseCount(), \
 				   value.getImmunizations()[0], \
 				   value.getAdminDates()[0], \
 				   value.getProcessingDates()[0], \
