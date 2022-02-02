@@ -14,6 +14,7 @@ import os
 
 class Populations:
 	def __init__(self):
+		"""Initialize class data members"""
 		self.cStudents = {}
 		self.fStudents = {}
 		self.faculty = {}
@@ -105,7 +106,7 @@ class Populations:
 
 	def getActiveNotCompliant(self):
 		"""Return all non-compliant active patients"""
-		# REDO
+		# Implement when needed
 		pass
 
 	def getCompliantDetails(self):
@@ -185,7 +186,6 @@ class Patient:
 
 	def appendImmunization(self, immunization):
 		"""Set immunization type"""
-
 		match immunization:
 			case 'COVID-19, mRNA LNP-S PF 100mcg or 50mcg':
 				self.__immunizations.append('COVID-19 Moderna mRNA-LNP spike')
@@ -224,7 +224,6 @@ class Patient:
 		self.__lots.extend(new.getLots())
 		self.__adminDates.extend(new.getAdminDates())
 		self.__processingDates.extend(new.getProcessingDates())
-
 
 	def fillLists(self):
 		"""Pad any lists that are not of length 3"""
@@ -329,7 +328,6 @@ def readInCompliance(populations):
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
-
 		for row in csv_reader:
 			# print(row)
 			patient = Patient(row[3].strip("'"), status = row[6])
@@ -353,9 +351,6 @@ def readInCompliance(populations):
 					populations.bExemption[patient.getCwid()] = patient
 				case _:
 					populations.notCompliant[patient.getCwid()] = patient
-
-	# print(populations.getCompliant())
-
 	print("4 finishing\n")
 
 
@@ -387,16 +382,6 @@ def readCairReport(populations):
 					populations.CAIR_patients[cwid].appendProcessingDate(row[6])
 
 					seen.append(row[0])
-
-	# print(populations.CAIR_patients["885236893"].getCwid())
-	# print(populations.CAIR_patients["885236893"].getImmunizations())
-	# print(populations.CAIR_patients["885236893"].getLots())
-	# print(populations.CAIR_patients["885236893"].getAdminDates())
-	# print(populations.CAIR_patients["885236893"].getProcessingDates())
-	# print(populations.CAIR_patients["885236893"].getEmployee())
-	# print(populations.CAIR_patients["885236893"].getStudent())
-
-
 	populations.prepLists()
 	print("5 finishing\n")
 
@@ -483,14 +468,6 @@ def createCompliantDetails(populations, path, t):
 	p = populations.getCompliant()
 	cN = os.path.join(path, "Compliant Details({}).csv".format(t))
 
-	# print(p["885236893"].getCwid())
-	# print(p["885236893"].getImmunizations())
-	# print(p["885236893"].getLots())
-	# print(p["885236893"].getAdminDates())
-	# print(p["885236893"].getProcessingDates())
-	# print(p["885236893"].getEmployee())
-	# print(p["885236893"].getStudent())
-
 	header = ['CWID', 'Dose Count', 'I1', 'AD1', 'PD1', 'L1', \
 			  'I2', 'AD2', 'PD2', 'L2', 'I3', 'AD3', 'PD3', 'L3']
 
@@ -500,9 +477,6 @@ def createCompliantDetails(populations, path, t):
 		writer.writerow(header)
 
 		for value in p.values():
-
-			# print(value.getCwid(), value.getImmunizations())
-
 			row = [value.getCwid(), value.getDoseCount(), \
 				   value.getImmunizations()[0], \
 				   value.getAdminDates()[0], \
@@ -516,13 +490,13 @@ def createCompliantDetails(populations, path, t):
 				   value.getAdminDates()[2], \
 				   value.getProcessingDates()[2], \
 				   value.getLots()[2]]
-
 			writer.writerow(row)
 	print("12 finishing\n")
 
 
 
 def concurrent(*functions):
+	"""Function for running processes concurrently"""
 	proc = []
 	for fn in functions:
 		p = Process(target=fn)
@@ -545,20 +519,6 @@ if __name__ == "__main__":
 	concurrent(readInEmployees(populations), readInStudents(populations), \
 			   readInNonState(populations), readInCompliance(populations), \
 			   readCairReport(populations))
-
-	# counter = 0
-	# for key, value in populations.getCompliant().items():
-	# 	if len(value.getImmunizations()) != len(value.getAdminDates()):
-	# 		counter += 1
-	# print("{}\n".format(counter))
-
-	# print("{}".format(populations.getCompliant()["885236893"].getImmunizations()))
-	# print("{}".format(populations.getCompliant()["885236893"].getLots()))
-	# print("{}".format(populations.getCompliant()["885236893"].getAdminDates()))
-	# print("{}".format(populations.getCompliant()["885236893"].getProcessingDates()))
-	# print("{}".format(populations.getCompliant()["885236893"].getEmployee()))
-	# print("{}".format(populations.getCompliant()["885236893"].getStudent()))
-
 
 	# Get current time
 	d = datetime.datetime.now()
