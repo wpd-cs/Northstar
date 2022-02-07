@@ -52,6 +52,13 @@ class Populations:
 			temp.update(d)
 		return temp
 
+	def getAllStudents(self):
+		"""Return all types of students"""
+		temp = {}
+		for d in [self.cStudents, self.fStudents]:
+			temp.update(d)
+		return temp
+
 	def prepLists(self):
 		"""Remove CAIR employees and assign immunizations and dates \
 		   to/from the Compliant dictionary"""
@@ -112,7 +119,6 @@ class Populations:
 	def getCompliantDetails(self):
 		"""Return immunization details"""
 		return self.CAIR_patients
-
 
 
 
@@ -463,7 +469,7 @@ def createActiveNonCompliant(populations, path, t):
 
 
 def createCompliantDetails(populations, path, t):
-	"""Create file wih immunization details"""
+	"""Create file with immunization details"""
 	print("12 starting\n")
 	p = populations.getCompliant()
 	cN = os.path.join(path, "Compliant Details({}).csv".format(t))
@@ -492,6 +498,59 @@ def createCompliantDetails(populations, path, t):
 				   value.getLots()[2]]
 			writer.writerow(row)
 	print("12 finishing\n")
+
+
+
+def createPSCodeReportsEMP(populations, path, t):
+	"""Create a file with PS codes"""
+	print("13 starting\n")
+	p = populations.getCompliant()
+	e = populations.getAllEmployees()
+
+	emp = {}
+
+	for key, value in p.items():
+		if key in e.keys():
+			emp.update({key: value})
+		else:
+			pass
+
+	cE = os.path.join(path, "C19 EMP({}).csv".format(t))
+
+	header = ['CWID', 'Administered Date', 'PS Code', 'Immunization']
+
+	with open(cE, "w", newline='') as f:
+			writer = csv.writer(f)
+
+			writer = writerow(header)
+
+			for # CONTINUE HERE
+
+
+	print("13 finishing\n")
+
+
+
+def createPSCodeReportsSTU(populations, path, t):
+	"""Create a file with PS codes"""
+	print("14 starting\n")
+	p = populations.getCompliant()
+	s = populations.getAllStudents()
+
+	stu = {}
+
+	for key, value in p.items():
+		if key in s.keys():
+			stu.update({key: value})
+		else:
+			pass
+
+	cS = os.path.join(path, "C19 STU({}).csv".format(t))
+
+	header = ['CWID', 'Administered Date', 'PS Code', 'Immunization']
+
+
+	print("14 finishing\n")
 
 
 
