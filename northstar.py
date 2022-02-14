@@ -34,8 +34,8 @@ class Populations:
 		self.bExemption = {}
 		self.notCompliant = {}
 
-		self.CAIR_patients = {}
-		self.vaccinated = {}
+		self.__cair_EMP = {}
+		self.__cair_STU = {}
 
 	def getAllTypes(self):
 		"""Return all types of patients"""
@@ -60,27 +60,24 @@ class Populations:
 			temp.update(d)
 		return temp
 
+	def getAllCAIRS(self):
+		"""Return all CAIRS data"""
+		temp = {}
+		for d in [self.__cair_EMP, self.__cair_STU]:
+			temp.update(d)
+		return temp
+
 	def prepLists(self):
-		"""Remove CAIR employees and assign immunizations and dates \
-		   to/from the Compliant dictionary"""
-
-		# Remove CAIR employees
-		rem = []
-		for key in self.CAIR_patients.keys():
-			if key in self.getAllEmployees().keys() and key in self.compliant.keys():
-				rem.append(key)
-
-		# Assign immunizations and dates to patients
+		"""Assign immunizations and dates to/from the Compliant dictionary"""
+		temp = self.getAllCAIRS()
 		for key in self.compliant.keys():
-			if key in self.CAIR_patients.keys():
-				self.compliant[key].chainList(self.CAIR_patients[key])
-				self.compliant[key].setEmployee(self.CAIR_patients[key].getEmployee())
-				self.compliant[key].setStudent(self.CAIR_patients[key].getStudent())
-				self.compliant[key].setDoseCount(len(self.CAIR_patients[key].getImmunizations()))
+			if key in temp:
+				self.compliant[key].chainList(temp[key])
+				self.compliant[key].setEmployee(temp[key].getEmployee())
+				self.compliant[key].setStudent(temp[key].getStudent())
+				self.compliant[key].setDoseCount(len(temp[key].getImmunizations()))
 
 			self.compliant[key].fillLists()
-		self.setVaccinated(self.compliant)
-		[self.compliant.pop(key) for key in rem]
 
 	def getCompliant(self):
 		"""Return all compliant patients"""
@@ -116,18 +113,6 @@ class Populations:
 		"""Return all non-compliant active patients"""
 		# Implement when needed
 		pass
-
-	def getCompliantDetails(self):
-		"""Return immunization details"""
-		return self.CAIR_patients
-
-	def getVaccinated(self):
-		"""Return all vaccinated patients"""
-		return self.vaccinated
-
-	def setVaccinated(self, vax):
-		"""Set vaccinated patients"""
-		self.vaccinated = vax.copy()
 
 
 
@@ -223,11 +208,11 @@ class Patient:
 	def appendPScode(self, immunization):
 		"""Set PS code"""
 		match immunization:
-			case ('COVID-19, mRNA LNP-S PF 100mcg or 50mcg' | 'COVID19 Moderna 50mcg booster'):
+			case ('COVID-19, mRNA LNP-S PF 100mcg or 50mcg' | 'COVID19 Moderna 50mcg booster' | 'COVID19 Moderna mRNA-LNP spike'):
 				self.__PScodes.append('MOD')
-			case 'COVID-19, mRNA,LNP-S,PF':
+			case ('COVID-19, mRNA,LNP-S,PF' | 'COVID19 Pfizer mRNA-LNP spike' | 'Pfizer mRNA LNP-S PF 12yrs and older' | 'COVID19 Pfizer mRna-LNP Spk 12yr'):
 				self.__PScodes.append('PFZ')
-			case 'COVID-19, vector-nr, rS-Ad26, PF':
+			case ('COVID-19, vector-nr, rS-Ad26, PF' | 'COVID19 Janssen/J&J viral vector'):
 				self.__PScodes.append('J&J')
 			case _:
 				self.__PScodes.append('NL2')
@@ -391,10 +376,10 @@ def readInCompliance(populations):
 
 
 
-def readCairReport(populations):
-	"""Read in CAIR Report"""
+def readC19Emp(populations):
+	"""Read in C19 employee report excluding CAIRs data"""
 	print("5 starting\n")
-	with open("cairs.csv") as f:
+	with open("c19emp.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
@@ -405,55 +390,74 @@ def readCairReport(populations):
 
 			if row[4] != '""':
 				if cwid in seen:
-					populations.CAIR_patients[cwid].appendImmunization(row[3])
-					populations.CAIR_patients[cwid].appendPScode(row[3])
-					populations.CAIR_patients[cwid].appendLot(row[4])
-					populations.CAIR_patients[cwid].appendAdminDate(row[5])
-					populations.CAIR_patients[cwid].appendProcessingDate(row[6])
+					populations.__cair_EMP[cwid].appendImmunization(row[3])
+					populations.__cair_EMP[cwid].appendPScode(row[3])
+					populations.__cair_EMP[cwid].appendLot(row[4])
+					populations.__cair_EMP[cwid].appendAdminDate(row[5])
+					populations.__cair_EMP[cwid].appendProcessingDate(row[6])
 				else:
-					populations.CAIR_patients[cwid] = Patient(cwid, employee = row[7], \
+					populations.__cair_EMP[cwid] = Patient(cwid, employee = row[7], \
 															  student = row[8])
-					populations.CAIR_patients[cwid].appendImmunization(row[3])
-					populations.CAIR_patients[cwid].appendPScode(row[3])
-					populations.CAIR_patients[cwid].appendLot(row[4])
-					populations.CAIR_patients[cwid].appendAdminDate(row[5])
-					populations.CAIR_patients[cwid].appendProcessingDate(row[6])
+					populations.__cair_EMP[cwid].appendImmunization(row[3])
+					populations.__cair_EMP[cwid].appendPScode(row[3])
+					populations.__cair_EMP[cwid].appendLot(row[4])
+					populations.__cair_EMP[cwid].appendAdminDate(row[5])
+					populations.__cair_EMP[cwid].appendProcessingDate(row[6])
 
 					seen.append(row[0])
-	populations.prepLists()
 	print("5 finishing\n")
+
+
+
+def readC19Stu(populations):
+	"""Read in C19 student report including CAIRs data"""
+	print("6 starting\n")
+	with open("c19emp.csv") as f:
+		csv_reader = csv.reader(f)
+		next(csv_reader)
+
+		seen = []
+
+		for row in csv_reader:
+			cwid = row[0].strip('"')
+
+			if row[4] != '""':
+				if cwid in seen:
+					populations.__cair_STU[cwid].appendImmunization(row[3])
+					populations.__cair_STU[cwid].appendPScode(row[3])
+					populations.__cair_STU[cwid].appendLot(row[4])
+					populations.__cair_STU[cwid].appendAdminDate(row[5])
+					populations.__cair_STU[cwid].appendProcessingDate(row[6])
+				else:
+					populations.__cair_STU[cwid] = Patient(cwid, employee = row[7], \
+															  student = row[8])
+					populations.__cair_STU[cwid].appendImmunization(row[3])
+					populations.__cair_STU[cwid].appendPScode(row[3])
+					populations.__cair_STU[cwid].appendLot(row[4])
+					populations.__cair_STU[cwid].appendAdminDate(row[5])
+					populations.__cair_STU[cwid].appendProcessingDate(row[6])
+
+					seen.append(row[0])
+	print("6 finishing\n")
 
 
 
 def createComplianceNUMBERS(populations, path, t):
 	"""Create compliance numbers file"""
-	print("6 starting\n")
+	print("7 starting\n")
 	# cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
 	# with open(cN, "w", newline='') as f:
 	# 	CONTINUE HERE
 	
-	print("6 finishing\n")
+	print("7 finishing\n")
 
 
 
 def createComplianceCWID(populations, path, t):
 	"""Create compliance CWID file"""
-	print("7 starting\n")
+	print("8 starting\n")
 	p = populations.getCompliant()
 	cN = os.path.join(path, "Compliance CWID({}).csv".format(t))
-	with open(cN, "w", newline='') as f:
-		writer = csv.writer(f)
-		for value in p.values():
-			writer.writerow([value.getCwid()])
-	print("7 finishing\n")
-
-
-
-def createExemptionList(populations, path, t):
-	"""Create exemption CWID file (for Central IT)"""
-	print("8 starting\n")
-	p = populations.getExemptions()
-	cN = os.path.join(path, "Exemption List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
 		for value in p.values():
@@ -462,48 +466,61 @@ def createExemptionList(populations, path, t):
 
 
 
+def createExemptionList(populations, path, t):
+	"""Create exemption CWID file (for Central IT)"""
+	print("9 starting\n")
+	p = populations.getExemptions()
+	cN = os.path.join(path, "Exemption List({}).csv".format(t))
+	with open(cN, "w", newline='') as f:
+		writer = csv.writer(f)
+		for value in p.values():
+			writer.writerow([value.getCwid()])
+	print("9 finishing\n")
+
+
+
 def createExemptList(populations, path, t):
 	"""Create exempt CWID file (for PeopleSoft)"""
-	print("9 starting\n")
+	print("10 starting\n")
 	p = populations.getExemptions()
 	cN = os.path.join(path, "Exempt List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
 		for value in p.values():
 			writer.writerow([value.getCwid(), value.getStatus().strip('"')])
-	print("9 finishing\n")
+	print("10 finishing\n")
 
 
 
 def createPNCCompliantList(populations, path, t):
 	"""Create participant CWID file"""
-	print("10 starting\n")
+	print("11 starting\n")
 	p = populations.getParticipants()
 	cN = os.path.join(path, "PNC Compliant List({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
 		for value in p.values():
 			writer.writerow([value.getCwid()])
-	print("10 finishing\n")
+	print("11 finishing\n")
 
 
 
 def createActiveNonCompliant(populations, path, t):
 	"""Create active, but not compliant CWID file"""
-	print("11 starting\n")
+	print("12 starting\n")
 	# p = populations.getActiveNotCompliant()
 	# cN = os.path.join(path, "Active Non-Compliant({}).csv".format(t))
 	# with open(cN, "w", newline='') as f:
 	# 	writer = csv.writer(f)
 	# 	for key in p.keys():
 	# 		writer.writerow([key])
-	print("11 finishing\n")
+	print("12 finishing\n")
 
 
 
 def createCompliantDetails(populations, path, t):
 	"""Create file with immunization details"""
-	print("12 starting\n")
+	print("13 starting\n")
 	p = populations.getCompliant()
 	cN = os.path.join(path, "Compliant Details({}).csv".format(t))
 
@@ -530,25 +547,14 @@ def createCompliantDetails(populations, path, t):
 				   value.getProcessingDates()[2], \
 				   value.getLots()[2]]
 			writer.writerow(row)
-	print("12 finishing\n")
+	print("13 finishing\n")
 
 
 
 def createPSCodeReportsEMP(populations, path, t):
 	"""Create a file with PS codes"""
-	print("13 starting\n")
-	p = populations.getVaccinated()
-	e = populations.getAllEmployees()
-
-	emp = {}
-
-	for key, value in p.items():
-		if key in e.keys():
-			print("here")
-			emp.update({key: value})
-		else:
-			pass
-
+	print("14 starting\n")
+	p = populations.__cair_EMP
 
 	cE = os.path.join(path, "C19 EMP({}).csv".format(t))
 
@@ -559,7 +565,7 @@ def createPSCodeReportsEMP(populations, path, t):
 
 		writer.writerow(header)
 
-		for value in emp.values():
+		for value in p.values():
 			rows = [
 					[value.getCwid(), value.getAdminDates()[0], value.getPScodes()[0], value.getImmunizations()[0]],
 					[value.getCwid(), value.getAdminDates()[1], value.getPScodes()[1], value.getImmunizations()[1]],
@@ -567,23 +573,14 @@ def createPSCodeReportsEMP(populations, path, t):
 				   ]
 
 			writer.writerows(rows)
-	print("13 finishing\n")
+	print("14 finishing\n")
 
 
 
 def createPSCodeReportsSTU(populations, path, t):
 	"""Create a file with PS codes"""
-	print("14 starting\n")
-	p = populations.getVaccinated()
-	s = populations.getAllStudents()
-
-	stu = {}
-
-	for key, value in p.items():
-		if key in s.keys():
-			stu.update({key: value})
-		else:
-			pass
+	print("15 starting\n")
+	p = populations.__cair_STU
 
 	cS = os.path.join(path, "C19 STU({}).csv".format(t))
 
@@ -594,7 +591,7 @@ def createPSCodeReportsSTU(populations, path, t):
 
 		writer.writerow(header)
 
-		for value in stu.values():
+		for value in p.values():
 
 			rows = [
 					[value.getCwid(), value.getAdminDates()[0], value.getPScodes()[0], value.getImmunizations()[0]],
@@ -603,7 +600,7 @@ def createPSCodeReportsSTU(populations, path, t):
 				   ]
 
 			writer.writerows(rows)
-	print("14 finishing\n")
+	print("15 finishing\n")
 
 
 
@@ -630,7 +627,9 @@ if __name__ == "__main__":
 
 	concurrent(readInEmployees(populations), readInStudents(populations), \
 			   readInNonState(populations), readInCompliance(populations), \
-			   readCairReport(populations))
+			   readC19Emp(populations), readC19Stu(populations))
+
+	populations.prepLists()
 
 	# Get current time
 	d = datetime.datetime.now()
