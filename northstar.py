@@ -34,8 +34,8 @@ class Populations:
 		self.bExemption = {}
 		self.notCompliant = {}
 
-		self.__cair_EMP = {}
-		self.__cair_STU = {}
+		self.cair_EMP = {}
+		self.cair_STU = {}
 
 	def getAllTypes(self):
 		"""Return all types of patients"""
@@ -63,21 +63,17 @@ class Populations:
 	def getAllCAIRS(self):
 		"""Return all CAIRS data"""
 		temp = {}
-		for d in [self.__cair_EMP, self.__cair_STU]:
+		for d in [self.cair_EMP, self.cair_STU]:
 			temp.update(d)
 		return temp
 
 	def prepLists(self):
 		"""Assign immunizations and dates to/from the Compliant dictionary"""
-		temp = self.getAllCAIRS()
-		for key in self.compliant.keys():
-			if key in temp:
-				self.compliant[key].chainList(temp[key])
-				self.compliant[key].setEmployee(temp[key].getEmployee())
-				self.compliant[key].setStudent(temp[key].getStudent())
-				self.compliant[key].setDoseCount(len(temp[key].getImmunizations()))
 
-			self.compliant[key].fillLists()
+		for key in self.cair_EMP.keys():
+			self.cair_EMP[key].fillLists()
+		for key in self.cair_STU.keys():
+			self.cair_STU[key].fillLists()
 
 	def getCompliant(self):
 		"""Return all compliant patients"""
@@ -192,27 +188,28 @@ class Patient:
 	def appendImmunization(self, immunization):
 		"""Set immunization type"""
 		match immunization:
-			case 'COVID-19, mRNA LNP-S PF 100mcg or 50mcg':
+			case ('COVID-19, mRNA LNP-S PF 100mcg or 50mcg' | 'COVID-19 Moderna mRNA-LNP spike' | 'COVID19 Moderna mRNA-LNP spike'):
 				self.__immunizations.append('COVID19 Moderna mRNA-LNP spike')
 			case 'Pfizer mRNA LNP-S PF 12yrs and older':
 				self.__immunizations.append('COVID19 Pfizer mRNA-LNP Spk 12yr')
-			case 'COVID-19, mRNA,LNP-S,PF':
+			case ('COVID-19, mRNA,LNP-S,PF' | 'COVID-19 Pfizer mRNA-LNP spike' | 'COVID19 Pfizer mRNA-LNP spike'):
 				self.__immunizations.append('COVID19 Pfizer mRNA-LNP spike')
-			case 'COVID-19, vector-nr, rS-Ad26, PF':
+			case ('COVID-19, vector-nr, rS-Ad26, PF' | 'COVID19 Janssen/J&J viral vector' | 'COVID-19Janssen/J&J viral vector'):
 				self.__immunizations.append('COVID19 Janssen/J&J viral vector')
-			case 'COVID-19, vector-nr, rS-ChAdOx1':
+			case ('COVID-19, vector-nr, rS-ChAdOx1' | 'COVID-19 AstraZeneca viralvector' | 'COVID19 AstraZeneca viralvector'):
 				self.__immunizations.append('COVID19 AstraZeneca viralvector')
 			case _:
 				self.__immunizations.append(immunization)
+		self.__doseCount += 1
 
 	def appendPScode(self, immunization):
 		"""Set PS code"""
 		match immunization:
-			case ('COVID-19, mRNA LNP-S PF 100mcg or 50mcg' | 'COVID19 Moderna 50mcg booster' | 'COVID19 Moderna mRNA-LNP spike'):
+			case ('COVID-19, mRNA LNP-S PF 100mcg or 50mcg' | 'COVID19 Moderna 50mcg booster' | 'COVID19 Moderna mRNA-LNP spike' | 'COVID-19 Moderna mRNA-LNP spike'):
 				self.__PScodes.append('MOD')
-			case ('COVID-19, mRNA,LNP-S,PF' | 'COVID19 Pfizer mRNA-LNP spike' | 'Pfizer mRNA LNP-S PF 12yrs and older' | 'COVID19 Pfizer mRna-LNP Spk 12yr'):
+			case ('COVID-19, mRNA,LNP-S,PF' | 'COVID19 Pfizer mRNA-LNP spike' | 'Pfizer mRNA LNP-S PF 12yrs and older' | 'COVID-19 Pfizer mRNA-LNP spike' | 'COVID19 Pfizer mRNA-LNP Spk 12yr'):
 				self.__PScodes.append('PFZ')
-			case ('COVID-19, vector-nr, rS-Ad26, PF' | 'COVID19 Janssen/J&J viral vector'):
+			case ('COVID-19, vector-nr, rS-Ad26, PF' | 'COVID19 Janssen/J&J viral vector' | 'COVID-19Janssen/J&J viral vector'):
 				self.__PScodes.append('J&J')
 			case _:
 				self.__PScodes.append('NL2')
@@ -248,11 +245,11 @@ class Patient:
 	def fillLists(self):
 		"""Pad any lists that are not of length 3"""
 		N = 3
-		self.__immunizations += [''] * (N - len(self.__immunizations))
-		self.__PScodes += [''] * (N - len(self.__PScodes))
-		self.__lots += [''] * (N - len(self.__lots))
-		self.__adminDates += [''] * (N - len(self.__adminDates))
-		self.__processingDates += [''] * (N - len(self.__processingDates))
+		self.__immunizations += ['N/A'] * (N - len(self.__immunizations))
+		self.__PScodes += ['N/A'] * (N - len(self.__PScodes))
+		self.__lots += ['N/A'] * (N - len(self.__lots))
+		self.__adminDates += ['N/A'] * (N - len(self.__adminDates))
+		self.__processingDates += ['N/A'] * (N - len(self.__processingDates))
 
 	def setEmployee(self, employee):
 		"""Set employee position"""
@@ -267,7 +264,7 @@ class Patient:
 def checkFiles():
 	"""Check to make sure all input files are present"""
 	listOfFiles = ["compliance.csv", "employee.txt", "student.txt", \
-				   "nonstate.txt", "cairs.csv"]
+				   "nonstate.txt", "c19emp.csv", "c19stu.csv"]
 
 	filesNeeded = []
 
@@ -355,7 +352,8 @@ def readInCompliance(populations):
 
 			match patient.getStatus():
 				case 'Compliant with Standard Requirements':
-					populations.compliant[patient.getCwid()] = patient
+					# populations.compliant[patient.getCwid()] = patient
+					pass
 				case 'Awaiting Review':
 					populations.aReview[patient.getCwid()] = patient
 				case 'Exemption: Pos COVID-19 90 Days':
@@ -388,23 +386,22 @@ def readC19Emp(populations):
 		for row in csv_reader:
 			cwid = row[0].strip('"')
 
-			if row[4] != '""':
-				if cwid in seen:
-					populations.__cair_EMP[cwid].appendImmunization(row[3])
-					populations.__cair_EMP[cwid].appendPScode(row[3])
-					populations.__cair_EMP[cwid].appendLot(row[4])
-					populations.__cair_EMP[cwid].appendAdminDate(row[5])
-					populations.__cair_EMP[cwid].appendProcessingDate(row[6])
-				else:
-					populations.__cair_EMP[cwid] = Patient(cwid, employee = row[7], \
-															  student = row[8])
-					populations.__cair_EMP[cwid].appendImmunization(row[3])
-					populations.__cair_EMP[cwid].appendPScode(row[3])
-					populations.__cair_EMP[cwid].appendLot(row[4])
-					populations.__cair_EMP[cwid].appendAdminDate(row[5])
-					populations.__cair_EMP[cwid].appendProcessingDate(row[6])
+			if cwid in seen:
+				populations.cair_EMP[cwid].appendImmunization(row[1])
+				populations.cair_EMP[cwid].appendPScode(row[1])
+				populations.cair_EMP[cwid].appendLot(row[2])
+				populations.cair_EMP[cwid].appendAdminDate(row[3])
+				populations.cair_EMP[cwid].appendProcessingDate(row[6])
+			else:
+				populations.cair_EMP[cwid] = Patient(cwid, employee = row[5], \
+														  student = row[6])
+				populations.cair_EMP[cwid].appendImmunization(row[1])
+				populations.cair_EMP[cwid].appendPScode(row[1])
+				populations.cair_EMP[cwid].appendLot(row[2])
+				populations.cair_EMP[cwid].appendAdminDate(row[3])
+				populations.cair_EMP[cwid].appendProcessingDate(row[4])
 
-					seen.append(row[0])
+				seen.append(row[0])
 	print("5 finishing\n")
 
 
@@ -412,7 +409,7 @@ def readC19Emp(populations):
 def readC19Stu(populations):
 	"""Read in C19 student report including CAIRs data"""
 	print("6 starting\n")
-	with open("c19emp.csv") as f:
+	with open("c19stu.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
@@ -421,23 +418,22 @@ def readC19Stu(populations):
 		for row in csv_reader:
 			cwid = row[0].strip('"')
 
-			if row[4] != '""':
-				if cwid in seen:
-					populations.__cair_STU[cwid].appendImmunization(row[3])
-					populations.__cair_STU[cwid].appendPScode(row[3])
-					populations.__cair_STU[cwid].appendLot(row[4])
-					populations.__cair_STU[cwid].appendAdminDate(row[5])
-					populations.__cair_STU[cwid].appendProcessingDate(row[6])
-				else:
-					populations.__cair_STU[cwid] = Patient(cwid, employee = row[7], \
-															  student = row[8])
-					populations.__cair_STU[cwid].appendImmunization(row[3])
-					populations.__cair_STU[cwid].appendPScode(row[3])
-					populations.__cair_STU[cwid].appendLot(row[4])
-					populations.__cair_STU[cwid].appendAdminDate(row[5])
-					populations.__cair_STU[cwid].appendProcessingDate(row[6])
+			if cwid in seen:
+				populations.cair_STU[cwid].appendImmunization(row[1])
+				populations.cair_STU[cwid].appendPScode(row[1])
+				populations.cair_STU[cwid].appendLot(row[2])
+				populations.cair_STU[cwid].appendAdminDate(row[3])
+				populations.cair_STU[cwid].appendProcessingDate(row[4])
+			else:
+				populations.cair_STU[cwid] = Patient(cwid, employee = row[5], \
+														  student = row[6])
+				populations.cair_STU[cwid].appendImmunization(row[1])
+				populations.cair_STU[cwid].appendPScode(row[1])
+				populations.cair_STU[cwid].appendLot(row[2])
+				populations.cair_STU[cwid].appendAdminDate(row[3])
+				populations.cair_STU[cwid].appendProcessingDate(row[4])
 
-					seen.append(row[0])
+				seen.append(row[0])
 	print("6 finishing\n")
 
 
@@ -456,7 +452,7 @@ def createComplianceNUMBERS(populations, path, t):
 def createComplianceCWID(populations, path, t):
 	"""Create compliance CWID file"""
 	print("8 starting\n")
-	p = populations.getCompliant()
+	p = populations.getAllCAIRS()
 	cN = os.path.join(path, "Compliance CWID({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
@@ -521,7 +517,7 @@ def createActiveNonCompliant(populations, path, t):
 def createCompliantDetails(populations, path, t):
 	"""Create file with immunization details"""
 	print("13 starting\n")
-	p = populations.getCompliant()
+	p = populations.getAllCAIRS()
 	cN = os.path.join(path, "Compliant Details({}).csv".format(t))
 
 	header = ['CWID', 'Dose Count', 'I1', 'AD1', 'PD1', 'L1', \
@@ -554,7 +550,7 @@ def createCompliantDetails(populations, path, t):
 def createPSCodeReportsEMP(populations, path, t):
 	"""Create a file with PS codes"""
 	print("14 starting\n")
-	p = populations.__cair_EMP
+	p = populations.cair_EMP
 
 	cE = os.path.join(path, "C19 EMP({}).csv".format(t))
 
@@ -580,7 +576,7 @@ def createPSCodeReportsEMP(populations, path, t):
 def createPSCodeReportsSTU(populations, path, t):
 	"""Create a file with PS codes"""
 	print("15 starting\n")
-	p = populations.__cair_STU
+	p = populations.cair_STU
 
 	cS = os.path.join(path, "C19 STU({}).csv".format(t))
 
