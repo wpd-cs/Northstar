@@ -3,7 +3,7 @@
 William Duong
 Project started: November 17, 2021
 wpduong@gmail.com
-Last Updated: 02/02/2021
+Last Updated: 03/02/2021
 """
 
 from sys import exit
@@ -74,6 +74,13 @@ class Populations:
 			self.cair_EMP[key].fillLists()
 		for key in self.cair_STU.keys():
 			self.cair_STU[key].fillLists()
+
+		p = populations.getAllCAIRS()
+		for key in p.keys():
+			if p[key].checkCompliance():
+				self.compliant[key] = p[key]
+			else:
+				continue
 
 	def getCompliant(self):
 		"""Return all compliant patients"""
@@ -251,6 +258,19 @@ class Patient:
 		self.__adminDates += ['N/A'] * (N - len(self.__adminDates))
 		self.__processingDates += ['N/A'] * (N - len(self.__processingDates))
 
+	def checkCompliance(self):
+		"""Check vaccination compliance of patient"""
+		if (self.__PScodes.count('MOD') >= 2) or (self.__PScodes.count('PFZ') >= 2) \
+			or (self.__PScodes.count('J&J') >= 1) or (self.__PScodes.count('NL2') >= 2):
+			return True
+		elif ((self.__immunizations.count('COVID19 Moderna mRNA-LNP spike') >= 1) \
+			or (self.__immunizations.count('COVID19 Pfizer mRNA-LNP Spk 12yr') >= 1) \
+			or (self.__immunizations.count('COVID19 Pfizer mRNA-LNP spike') >= 1)) and \
+			(self.__PScodes.count('NL2') >= 1):
+			return True
+		else:
+			return False
+
 	def setEmployee(self, employee):
 		"""Set employee position"""
 		self.__isEmployee = employee
@@ -353,7 +373,7 @@ def readInCompliance(populations):
 			match patient.getStatus():
 				case 'Compliant with Standard Requirements':
 					# populations.compliant[patient.getCwid()] = patient
-					pass
+					continue
 				case 'Awaiting Review':
 					populations.aReview[patient.getCwid()] = patient
 				case 'Exemption: Pos COVID-19 90 Days':
@@ -452,8 +472,8 @@ def createComplianceNUMBERS(populations, path, t):
 def createComplianceCWID(populations, path, t):
 	"""Create compliance CWID file"""
 	print("8 starting\n")
-	p = populations.getAllCAIRS()
-	cN = os.path.join(path, "Compliance CWID({}).csv".format(t))
+	p = populations.getCompliant()
+	cN = os.path.join(path, "Primary Compliance CWID({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
 		for value in p.values():
