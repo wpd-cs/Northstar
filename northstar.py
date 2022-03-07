@@ -642,7 +642,7 @@ def createPSCodeReportsCombined(populations, path, t):
 
 			if (value.getPScodes()[1] != "N/A"):
 				rows.append([value.getCwid(), value.getAdminDates()[1], value.getPScodes()[1], value.getImmunizations()[1]])
-			if (value.getPScodes()[2] != "N/A")
+			if (value.getPScodes()[2] != "N/A"):
 				rows.append([value.getCwid(), value.getAdminDates()[2], value.getPScodes()[2], value.getImmunizations()[2]])
 
 
