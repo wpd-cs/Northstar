@@ -645,6 +645,9 @@ def createPSCodeReportsCombined(populations, path, t):
 			if (value.getPScodes()[2] != "N/A"):
 				rows.append([value.getCwid(), value.getAdminDates()[2], value.getPScodes()[2], value.getImmunizations()[2]])
 
+			writer.writerows(rows)
+	print("16 finishing\n")
+
 
 
 def concurrent(*functions):
