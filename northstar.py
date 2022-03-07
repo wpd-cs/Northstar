@@ -693,4 +693,4 @@ if __name__ == "__main__":
 			   createExemptionList(populations, path, t), createExemptList(populations, path, t), \
 			   createPNCCompliantList(populations, path, t), createActiveNonCompliant(populations, path, t), \
 			   createCompliantDetails(populations, path, t), createPSCodeReportsEMP(populations, path, t), \
-			   createPSCodeReportsSTU(populations, path, t))
+			   createPSCodeReportsSTU(populations, path, t), createPSCodeReportsCombined(populations, path, t))
