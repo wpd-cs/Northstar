@@ -637,13 +637,13 @@ def createPSCodeReportsCombined(populations, path, t):
 		for value in p.values():
 
 			rows = [
-					[value.getCwid(), value.getAdminDates()[0], value.getPScodes()[0], value.getImmunizations()[0]]
+					[value.getCwid(), value.getAdminDates()[0], value.getPScodes()[0]]
 				   ]
 
 			if (value.getPScodes()[1] != "N/A"):
-				rows.append([value.getCwid(), value.getAdminDates()[1], value.getPScodes()[1], value.getImmunizations()[1]])
+				rows.append([value.getCwid(), value.getAdminDates()[1], value.getPScodes()[1]])
 			if (value.getPScodes()[2] != "N/A"):
-				rows.append([value.getCwid(), value.getAdminDates()[2], value.getPScodes()[2], value.getImmunizations()[2]])
+				rows.append([value.getCwid(), value.getAdminDates()[2], value.getPScodes()[2]])
 
 			writer.writerows(rows)
 	print("16 finishing\n")
