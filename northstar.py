@@ -512,7 +512,7 @@ def createPNCCompliantList(populations, path, t):
 	"""Create participant CWID file"""
 	print("11 starting\n")
 	p = populations.getParticipants()
-	cN = os.path.join(path, "PNC Compliant List({}).csv".format(t))
+	cN = os.path.join(path, "C19 Participants({}).csv".format(t))
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
 		for value in p.values():
@@ -572,11 +572,11 @@ def createPSCodeReportsEMP(populations, path, t):
 	print("14 starting\n")
 	p = populations.cair_EMP
 
-	cE = os.path.join(path, "C19 EMP({}).csv".format(t))
+	cN = os.path.join(path, "C19 EMP({}).csv".format(t))
 
 	header = ['CWID', 'Administered Date', 'PS Code', 'Immunization']
 
-	with open(cE, "w", newline='') as f:
+	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
 
 		writer.writerow(header)
@@ -598,11 +598,11 @@ def createPSCodeReportsSTU(populations, path, t):
 	print("15 starting\n")
 	p = populations.cair_STU
 
-	cS = os.path.join(path, "C19 STU({}).csv".format(t))
+	cN = os.path.join(path, "C19 STU({}).csv".format(t))
 
 	header = ['CWID', 'Administered Date', 'PS Code', 'Immunization']
 
-	with open(cS, "w", newline='') as f:
+	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
 
 		writer.writerow(header)
@@ -617,6 +617,33 @@ def createPSCodeReportsSTU(populations, path, t):
 
 			writer.writerows(rows)
 	print("15 finishing\n")
+
+
+
+def createPSCodeReportsCombined(populations, path, t):
+	"""Create a combined file with PS codes"""
+	print("16 starting\n")
+	p = populations.getAllCAIRS()
+
+	cN = os.path.join(path, "C19 Primary({}).csv".format(t))
+
+	header = ['CWID', 'Administered Date', 'PS Code']
+
+	with open(cN, "w", newline='') as f:
+		writer = csv.writer(f)
+
+		writer.writerow(header)
+
+		for value in p.values():
+
+			rows = [
+					[value.getCwid(), value.getAdminDates()[0], value.getPScodes()[0], value.getImmunizations()[0]]
+				   ]
+
+			if (value.getPScodes()[1] != "N/A"):
+				rows.append([value.getCwid(), value.getAdminDates()[1], value.getPScodes()[1], value.getImmunizations()[1]])
+			if (value.getPScodes()[2] != "N/A")
+				rows.append([value.getCwid(), value.getAdminDates()[2], value.getPScodes()[2], value.getImmunizations()[2]])
 
 
 
