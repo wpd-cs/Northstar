@@ -627,7 +627,7 @@ def createPSCodeReportsCombined(populations, path, t):
 
 	cN = os.path.join(path, "C19 Primary({}).csv".format(t))
 
-	header = ['CWID', 'Administered Date', 'PS Code']
+	header = ['CWID', 'Administered Date', 'PS Code', 'isEmployee', 'isStudent']
 
 	with open(cN, "w", newline='') as f:
 		writer = csv.writer(f)
@@ -637,13 +637,13 @@ def createPSCodeReportsCombined(populations, path, t):
 		for value in p.values():
 
 			rows = [
-					[value.getCwid(), value.getAdminDates()[0], value.getPScodes()[0]]
+					[value.getCwid(), value.getAdminDates()[0], value.getPScodes()[0], value.getEmployee(), value.getStudent()]
 				   ]
 
 			if (value.getPScodes()[1] != "N/A"):
-				rows.append([value.getCwid(), value.getAdminDates()[1], value.getPScodes()[1]])
+				rows.append([value.getCwid(), value.getAdminDates()[1], value.getPScodes()[1], value.getEmployee(), value.getStudent()])
 			if (value.getPScodes()[2] != "N/A"):
-				rows.append([value.getCwid(), value.getAdminDates()[2], value.getPScodes()[2]])
+				rows.append([value.getCwid(), value.getAdminDates()[2], value.getPScodes()[2], value.getEmployee(), value.getStudent()])
 
 			writer.writerows(rows)
 	print("16 finishing\n")
