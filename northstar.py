@@ -283,24 +283,29 @@ class Patient:
 
 def checkFiles():
 	"""Check to make sure all input files are present"""
+	folder = "INPUT_HERE/"
+	
+	filesNeeded = []
+
 	listOfFiles = ["compliance.csv", "employee.txt", "student.txt", \
 				   "nonstate.txt", "c19emp.csv", "c19stu.csv"]
 
-	filesNeeded = []
+	currFiles = os.listdir(folder)
+
 
 	for file in listOfFiles:
-		if not os.path.exists(file):
+		if file not in set(currFiles):
 			filesNeeded.append(file)
 
 	if filesNeeded:
-		exit("ERROR\nMissing files: {}".format(filesNeeded))
+		exit("ERROR\nMissing file(s): {}".format(filesNeeded))
 
 
 
 def readInEmployees(populations):
 	"""Read in employee extract"""
 	print("1 starting\n")
-	with open("employee.txt", "r") as f:
+	with open("INPUT_HERE/employee.txt", "r") as f:
 		temp = f.readline()
 		del temp
 
@@ -320,7 +325,7 @@ def readInEmployees(populations):
 def readInStudents(populations):
 	"""Read in student extract"""
 	print("2 starting\n")
-	with open("student.txt", "r") as f:
+	with open("INPUT_HERE/student.txt", "r") as f:
 		temp = f.readline()
 		del temp
 
@@ -340,7 +345,7 @@ def readInStudents(populations):
 def readInNonState(populations):
 	"""Read in non-state extract"""
 	print("3 starting\n")
-	with open("nonstate.txt", "r") as f:
+	with open("INPUT_HERE/nonstate.txt", "r") as f:
 		temp = f.readline()
 		del temp
 
@@ -362,7 +367,7 @@ def readInNonState(populations):
 def readInCompliance(populations):
 	"""Read in PNC Data"""
 	print("4 starting\n")
-	with open("compliance.csv") as f:
+	with open("INPUT_HERE/compliance.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
@@ -397,7 +402,7 @@ def readInCompliance(populations):
 def readC19Emp(populations):
 	"""Read in C19 employee report excluding CAIRs data"""
 	print("5 starting\n")
-	with open("c19emp.csv") as f:
+	with open("INPUT_HERE/c19emp.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
@@ -429,7 +434,7 @@ def readC19Emp(populations):
 def readC19Stu(populations):
 	"""Read in C19 student report including CAIRs data"""
 	print("6 starting\n")
-	with open("c19stu.csv") as f:
+	with open("INPUT_HERE/c19stu.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
@@ -685,7 +690,7 @@ if __name__ == "__main__":
 	t = d.strftime("%b-%d-%Y")
 
 	# Create folder
-	parent_dir = os.getcwd()
+	parent_dir = os.getcwd() + "\\OUTPUT_HERE"
 	path = os.path.join(parent_dir, e)
 	os.mkdir(path)
 
