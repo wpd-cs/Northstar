@@ -283,7 +283,7 @@ class Patient:
 
 def checkFiles():
 	"""Check to make sure all input files are present"""
-	folder = "INPUT_HERE/"
+	folder = "INPUT_HERE\\"
 	
 	filesNeeded = []
 
@@ -305,7 +305,7 @@ def checkFiles():
 def readInEmployees(populations):
 	"""Read in employee extract"""
 	print("1 starting\n")
-	with open("INPUT_HERE/employee.txt", "r") as f:
+	with open("INPUT_HERE\\employee.txt", "r") as f:
 		temp = f.readline()
 		del temp
 
@@ -325,7 +325,7 @@ def readInEmployees(populations):
 def readInStudents(populations):
 	"""Read in student extract"""
 	print("2 starting\n")
-	with open("INPUT_HERE/student.txt", "r") as f:
+	with open("INPUT_HERE\\student.txt", "r") as f:
 		temp = f.readline()
 		del temp
 
@@ -345,7 +345,7 @@ def readInStudents(populations):
 def readInNonState(populations):
 	"""Read in non-state extract"""
 	print("3 starting\n")
-	with open("INPUT_HERE/nonstate.txt", "r") as f:
+	with open("INPUT_HERE\\nonstate.txt", "r") as f:
 		temp = f.readline()
 		del temp
 
@@ -367,7 +367,7 @@ def readInNonState(populations):
 def readInCompliance(populations):
 	"""Read in PNC Data"""
 	print("4 starting\n")
-	with open("INPUT_HERE/compliance.csv") as f:
+	with open("INPUT_HERE\\compliance.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
@@ -402,7 +402,7 @@ def readInCompliance(populations):
 def readC19Emp(populations):
 	"""Read in C19 employee report excluding CAIRs data"""
 	print("5 starting\n")
-	with open("INPUT_HERE/c19emp.csv") as f:
+	with open("INPUT_HERE\\c19emp.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
@@ -434,7 +434,7 @@ def readC19Emp(populations):
 def readC19Stu(populations):
 	"""Read in C19 student report including CAIRs data"""
 	print("6 starting\n")
-	with open("INPUT_HERE/c19stu.csv") as f:
+	with open("INPUT_HERE\\c19stu.csv") as f:
 		csv_reader = csv.reader(f)
 		next(csv_reader)
 
