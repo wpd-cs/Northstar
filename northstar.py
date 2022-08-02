@@ -3,7 +3,7 @@
 William Duong
 Project started: November 17, 2021
 wpduong@gmail.com
-Last Updated: 03/02/2021
+Last Updated: 08/02/2021
 """
 
 from sys import exit
@@ -376,22 +376,22 @@ def readInCompliance(populations):
 			patient = Patient(row[3].strip("'"), status = row[6])
 
 			match patient.getStatus():
-				case 'Compliant with Standard Requirements':
+				case 'Satisfied':
 					# populations.compliant[patient.getCwid()] = patient
 					continue
 				case 'Awaiting Review':
 					populations.aReview[patient.getCwid()] = patient
-				case 'Exemption: Pos COVID-19 90 Days':
+				case 'Exempt: Pos COVID-19 90 Days':
 					populations.cExemption[patient.getCwid()] = patient
-				case 'Exemption: Extension COVID-19':
+				case 'Exempt: Extension COVID-19':
 					populations.eExemption[patient.getCwid()] = patient
-				case 'Exemption: Medical COVID-19':
+				case 'Exempt: Medical COVID-19':
 					populations.mExemption[patient.getCwid()] = patient
-				case 'Exemption: Religious COVID-19':
+				case 'Exempt: Religious COVID-19':
 					populations.rExemption[patient.getCwid()] = patient
-				case 'Exemption: Pregnant COVID-19':
+				case 'Exempt: Pregnant COVID-19':
 					populations.pExemption[patient.getCwid()] = patient
-				case 'Exemption: Breast Feeding COVID':
+				case 'Exempt: Breast Feeding COVID':
 					populations.bExemption[patient.getCwid()] = patient
 				case _:
 					populations.notCompliant[patient.getCwid()] = patient
