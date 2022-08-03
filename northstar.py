@@ -3,7 +3,7 @@
 William Duong
 Project started: November 17, 2021
 wpduong@gmail.com
-Last Updated: 08/02/2021
+Last Updated: 08/03/2021
 """
 
 from sys import exit
@@ -373,7 +373,7 @@ def readInCompliance(populations):
 
 		for row in csv_reader:
 			# print(row)
-			patient = Patient(row[3].strip("'"), status = row[6])
+			patient = Patient(row[3].strip("'"), status = row[7])
 
 			match patient.getStatus():
 				case 'Satisfied':
