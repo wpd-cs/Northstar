@@ -117,6 +117,38 @@ class Populations:
 		# Implement when needed
 		pass
 
+	def getCompliantStudents(self):
+		"""Return all compliant students"""
+		temp = {}
+		for key, value in populations.getAllStudents().items():
+			if key in self.compliant.keys():
+				temp.update(key = value)
+		return temp
+
+	def getExemptStudents(self):
+		"""Return all exempt students"""
+		temp = {}
+		for key, value in populations.getAllStudents().items():
+			if key in populations.getExemptions.keys():
+				temp.update(key = value)
+		return temp
+
+	def getUnboostedStudents(self):
+		"""Return all unboosted students"""
+		temp = {}
+		for key, value in populations.getAllStudents().items():
+			if value.getDoseCount() <= 2:
+				temp.update(key = value)
+		return temp
+
+	def getUnvaccinatedStudents(self):
+		"""Return all unvaccinated students"""
+		temp = {}
+		for key, value in populations.getAllStudents().items():
+			if key in self.notCompliant.keys():
+				temp.update(key = value)
+		return temp
+
 
 
 class Patient:
@@ -260,8 +292,8 @@ class Patient:
 
 	def checkCompliance(self):
 		"""Check vaccination compliance of patient"""
-		if (self.__PScodes.count('MOD') >= 2) or (self.__PScodes.count('PFZ') >= 2) \
-			or (self.__PScodes.count('J&J') >= 1) or (self.__PScodes.count('NL2') >= 2):
+		if (self.__PScodes.count('MOD') >= 3) or (self.__PScodes.count('PFZ') >= 3) \
+			or (self.__PScodes.count('J&J') >= 2) or (self.__PScodes.count('NL2') >= 3):
 			return True
 		elif ((self.__immunizations.count('COVID19 Moderna mRNA-LNP spike') >= 1) \
 			or (self.__immunizations.count('COVID19 Pfizer mRNA-LNP Spk 12yr') >= 1) \
@@ -466,9 +498,15 @@ def readC19Stu(populations):
 def createComplianceNUMBERS(populations, path, t):
 	"""Create compliance numbers file"""
 	print("7 starting\n")
-	# cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
-	# with open(cN, "w", newline='') as f:
-	# 	CONTINUE HERE
+	students = len(populations.getAllStudents())
+	bStudents = len(populations.getCompliantStudents())
+	vStudents = len(populations.getUnboostedStudents())
+	uStudents = len(populations.getUnvaccinatedStudents())
+	cN = os.path.join(path, "Compliance_NUMBERS({}).txt".format(t))
+	with open(cN, "w", newline='') as f:
+		f.write("\% of boosted students: {}%".format((bStudents/students) * 100))
+		f.write("\% of vaccinated student: {}%".format((vStudents/students) * 100))
+		f.write("\% of unvaccinated student: {}%".format((uStudents/students) * 100))
 	
 	print("7 finishing\n")
 
