@@ -3,7 +3,7 @@
 William Duong
 Project started: November 17, 2021
 wpduong@gmail.com
-Last Updated: 08/02/2021
+Last Updated: 01/11/2023
 """
 
 from sys import exit
@@ -372,29 +372,58 @@ def readInCompliance(populations):
 		next(csv_reader)
 
 		for row in csv_reader:
-			# print(row)
 			patient = Patient(row[3].strip("'"), status = row[7])
 
-			match patient.getStatus():
-				case 'Satisfied':
-					# populations.compliant[patient.getCwid()] = patient
-					continue
-				case 'Awaiting Review':
-					populations.aReview[patient.getCwid()] = patient
-				case 'Exempt: Pos COVID-19 90 Days':
-					populations.cExemption[patient.getCwid()] = patient
-				case 'Exempt: Extension COVID-19':
-					populations.eExemption[patient.getCwid()] = patient
-				case 'Exempt: Medical COVID-19':
-					populations.mExemption[patient.getCwid()] = patient
-				case 'Exempt: Religious COVID-19':
-					populations.rExemption[patient.getCwid()] = patient
-				case 'Exempt: Pregnant COVID-19':
-					populations.pExemption[patient.getCwid()] = patient
-				case 'Exempt: Breast Feeding COVID':
-					populations.bExemption[patient.getCwid()] = patient
-				case _:
-					populations.notCompliant[patient.getCwid()] = patient
+			# match patient.getStatus():
+			# 	case 'Satisfied':
+			# 		# populations.compliant[patient.getCwid()] = patient
+			# 		continue
+			# 	case 'Awaiting Review':
+			# 		populations.aReview[patient.getCwid()] = patient
+			# 	case 'Exempt: Pos COVID-19 90 Days':
+			# 		populations.cExemption[patient.getCwid()] = patient
+			# 	case 'Exempt: Extension COVID-19':
+			# 		populations.eExemption[patient.getCwid()] = patient
+			# 	case 'Exempt: Medical COVID-19':
+			# 		populations.mExemption[patient.getCwid()] = patient
+			# 	case 'Exempt: Religious COVID-19':
+			# 		populations.rExemption[patient.getCwid()] = patient
+			# 	case 'Exempt: Pregnant COVID-19':
+			# 		populations.pExemption[patient.getCwid()] = patient
+			# 	case 'Exempt: Breast Feeding COVID':
+			# 		populations.bExemption[patient.getCwid()] = patient
+			# 	case _:
+			# 		populations.notCompliant[patient.getCwid()] = patient
+
+			x = patient.getStatus()
+
+			if x.split()[-1] == 'Satisfied' and 'Not' not in x:
+				# populations.compliant[patient.getCwid()] = patient
+				continue
+			if 'Awaiting Review' in x:
+				patient.setStatus('Awaiting Review')
+				populations.aReview[patient.getCwid()] = patient
+			elif 'Exempt: Pos COVID-19 90 Days' in x:
+				patient.setStatus('Exempt: Pos COVID-19 90 Days')
+				populations.cExemption[patient.getCwid()] = patient
+			elif 'Exempt: Extension COVID-19' in x:
+				patient.setStatus('Exempt: Extension COVID-19')
+				populations.eExemption[patient.getCwid()] = patient
+			elif 'Exempt: Medical COVID-19' in x:
+				patient.setStatus('Exempt: Medical COVID-19')
+				populations.mExemption[patient.getCwid()] = patient
+			elif 'Exempt: Religious COVID-19' in x:
+				patient.setStatus('Exempt: Religious COVID-19')
+				populations.rExemption[patient.getCwid()] = patient
+			elif 'Exempt: Pregnant COVID-19' in x:
+				patient.setStatus('Exempt: Pregnant COVID-19')
+				populations.pExemption[patient.getCwid()] = patient
+			elif 'Exempt: Breast Feeding COVID' in x:
+				patient.setStatus('Exempt: Breast Feeding COVID')
+				populations.bExemption[patient.getCwid()] = patient
+			else:
+				patient.setStatus('Not Satisfied')
+				populations.notCompliant[patient.getCwid()] = patient
 	print("4 finishing\n")
 
 
